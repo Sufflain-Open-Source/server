@@ -1,4 +1,4 @@
 Makefile
 tests/
 *.rkt~
-config.rkt
+auth.rkt
