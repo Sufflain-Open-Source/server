@@ -4,6 +4,7 @@
         "password": ""
     },
     "database": {
-        "url": ""
+        "url": "",
+        "apiKey": ""
     }
 }

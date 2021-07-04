@@ -22,11 +22,27 @@
          racket/port
          mock)
 
+(provide get-config
+         CONFIG-USER-KEY
+         CONFIG-USER-EMAIL-KEY
+         CONFIG-USER-PASSWORD-KEY
+         CONFIG-DATABASE-KEY
+         CONFIG-DATABASE-URL-KEY
+         CONFIG-DATABASE-API-KEY
+         EXAMPLE-JSEXPR/STRING)
+
+(define CONFIG-USER-KEY          'user)
+(define CONFIG-USER-EMAIL-KEY    'email)
+(define CONFIG-USER-PASSWORD-KEY 'password)
+
+(define CONFIG-DATABASE-KEY     'database)
+(define CONFIG-DATABASE-URL-KEY 'url)
+(define CONFIG-DATABASE-API-KEY 'apiKey)
+
+
 (define EXAMPLE-API-KEY "XhfT4ih0k7!")
 (define EXAMPLE-JSEXPR/STRING
   (string-append "{\"apiKey\" : \"" EXAMPLE-API-KEY "\"}"))
-#;(define EXAMPLE-JSEXPR
-    (make-immutable-hasheq `((apiKey . ,EXAMPLE-API-KEY))))
 (define CONFIG-DIR-PATH
   (string-append 
    (path->string 
@@ -35,43 +51,43 @@
 (define CONFIG-PATH
   (string-append CONFIG-DIR-PATH "/sufflain-config.json"))
 
-(define dir-or-file-exists-mock/true  (mock #:behavior (const #t)))
-(define dir-or-file-exists-mock/false (mock #:behavior (const #f)))
-(define string-port-mock              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
+(define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
+(define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))
+(define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
 
 (module+ test
   (require rackunit)
   
-  (test-case "get-config"
-             (check-pred jsexpr? (get-config #:config-exists-mock dir-or-file-exists-mock/true
-                                             #:file-reader-mock   string-port-mock)))
+  
+  (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                  #:file-reader-mock   STRING-PORT-MOCK))
   
   (test-case "config-exists?"
-             (check-true  (config-exists? #:dir-check-mock  dir-or-file-exists-mock/true
-                                          #:file-check-mock dir-or-file-exists-mock/true))
-             (check-false (config-exists? #:dir-check-mock  dir-or-file-exists-mock/false
-                                          #:file-check-mock dir-or-file-exists-mock/false))
-             (check-false (config-exists? #:dir-check-mock  dir-or-file-exists-mock/true
-                                          #:file-check-mock dir-or-file-exists-mock/false))))
+             (check-true  (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/TRUE))
+             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/FALSE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))
+             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))))
 
 ;; get-config: nothing -> jsexpr
 ;; Reads data from the config file.
 (define (get-config #:config-exists-mock [config-exists? config-exists?]
                     #:file-reader-mock   [port->string   port->string])
-  (define file-port (if (config-exists?)
+  (define FILE-PORT (if (config-exists?)
                         (open-input-file CONFIG-PATH)
                         #f))
-  (if (boolean? file-port)
+  (if (boolean? FILE-PORT)
       (raise exn:fail:filesystem)
-      (read-json file-port)))
+      (read-json FILE-PORT)))
 
 ;; config-exists?: nothing -> boolean?
 ;; Checks if the config file is present.
 (define (config-exists? #:dir-check-mock  [directory-exists? directory-exists?]
                         #:file-check-mock [file-exists?      file-exists?])
   (let* 
-      ([config-dir-path-exists? (directory-exists? CONFIG-DIR-PATH)]
-       [config-file-exists?     (if config-dir-path-exists?
+      ([CONFIG-DIR-PATH-EXISTS? (directory-exists? CONFIG-DIR-PATH)]
+       [CONFIG-FILE-EXISTS     (if CONFIG-DIR-PATH-EXISTS?
                                     (file-exists? CONFIG-PATH)
                                     #f)])
-    config-file-exists?))
+    CONFIG-FILE-EXISTS))

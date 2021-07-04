@@ -33,43 +33,38 @@
 (define EXAMPLE-HTML/XEXPR
   `(*TOP* (html (head (title ,EXAMPLE-TITLE)))))
 
-(define tcp-call-mock (mock #:behavior (const EXAMPLE-HTML)))
-(define get-page-mock (mock #:behavior (const EXAMPLE-HTML/XEXPR)))
+(define TCP-CALL-MOCK (mock #:behavior (const EXAMPLE-HTML)))
+(define GET-PAGE-MOCK (mock #:behavior (const EXAMPLE-HTML/XEXPR)))
 
 (module+ test
   (require rackunit)
   
-  (test-case "regex-select"
-             (check-equal? (regex-select '("СА21-19" "try me" "Ф21-19") #px"\\S{1,2}\\d{2}-\\d{2}")
-                           '("СА21-19" "Ф21-19")))
-  
-  (test-case "scrape"
-             (check-equal? (scrape EXAMPLE-URL "//title/text()" #:page-mock get-page-mock)
-                           `(,EXAMPLE-TITLE)))
-  
-  (test-case "get-page"
-             (check-equal? (get-page EXAMPLE-URL #:tcp-call-mock tcp-call-mock)
-                           EXAMPLE-HTML/XEXPR)))
+  (check-equal? (regex-select '("СА21-19" "try me" "Ф21-19") #px"\\S{1,2}\\d{2}-\\d{2}")
+                '("СА21-19" "Ф21-19"))
+  (check-equal? (scrape EXAMPLE-URL "//title/text()" #:page-mock GET-PAGE-MOCK)
+                `(,EXAMPLE-TITLE))
+  (check-equal? (get-page EXAMPLE-URL #:tcp-call-mock TCP-CALL-MOCK)
+                EXAMPLE-HTML/XEXPR))
 
 ;; regex-select: (listof string?) regexp? -> (listof string?)
 ;; Selects data based on the provided regex.
 (define (regex-select list-of-data rx)
   (let* 
-      ([list-of-regex-match (map (lambda (element)
+      ([LIST-OF-REGEX-MATCH (map (lambda (element)
                                    (regexp-match rx element)) list-of-data)]
-       [filtered-matches    (filter list? list-of-regex-match)])
+       [FILTERED-MATCHES    (filter list? LIST-OF-REGEX-MATCH)])
     (map (lambda (element) 
-           (car element)) filtered-matches)))
+           (car element)) FILTERED-MATCHES)))
 
 ;; scrape: url? txpath? -> (listof string?)
 ;; Extracts data from page.
 (define (scrape page-url xpath #:page-mock [get-page get-page])
-  (define page-sxml (get-page page-url))
-  ((txpath xpath) page-sxml))
+  (define PAGE-SXML (get-page page-url))
+  ((txpath xpath) PAGE-SXML))
 
 ;; get-page: url? -> sxml?
 ;; Gets a web page and returns it as an SXML.
 (define (get-page url-string #:tcp-call-mock [call/input-url call/input-url])
-  (let* ((url           (string->url url-string))
-         (get-page/html (call/input-url url get-pure-port port->string)))
-    (html->xexp get-page/html)))
+  (let* ((URL           (string->url url-string))
+         (GET-PAGE/HTML (call/input-url URL get-pure-port port->string)))
+    (html->xexp GET-PAGE/HTML)))
