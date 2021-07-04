@@ -1,4 +1,7 @@
 {
+    "identityToolkit": {
+        "url": ""
+    },
     "user": {
         "email": "",
         "password": ""
@@ -6,5 +9,10 @@
     "database": {
         "url": "",
         "apiKey": ""
+    },
+    "collegeSite": {
+        "blogUrl": "",
+        "groupsXpath": "",
+        "groupsRegex": ""
     }
 }

@@ -20,29 +20,36 @@
 (require json
          racket/function
          racket/port
-         mock)
+         "shared/keys.rkt")
 
-(provide get-config
+(provide identity-toolkit
+         identity-toolkit?
+         identity-toolkit-url
+         user
+         user?
+         user-email
+         user-password
+         database
+         database?
+         database-url
+         database-api-key
+         college-site
+         college-site?
+         college-site-blog-url
+         college-site-groups-xpath
+         college-site-groups-regex
+         get-identity-toolkit
+         get-user-credentials
+         get-database-info
+         get-college-site-info
+         get-config
          CONFIG-USER-KEY
          CONFIG-USER-EMAIL-KEY
          CONFIG-USER-PASSWORD-KEY
          CONFIG-DATABASE-KEY
          CONFIG-DATABASE-URL-KEY
-         CONFIG-DATABASE-API-KEY
-         EXAMPLE-JSEXPR/STRING)
+         CONFIG-DATABASE-API-KEY)
 
-(define CONFIG-USER-KEY          'user)
-(define CONFIG-USER-EMAIL-KEY    'email)
-(define CONFIG-USER-PASSWORD-KEY 'password)
-
-(define CONFIG-DATABASE-KEY     'database)
-(define CONFIG-DATABASE-URL-KEY 'url)
-(define CONFIG-DATABASE-API-KEY 'apiKey)
-
-
-(define EXAMPLE-API-KEY "XhfT4ih0k7!")
-(define EXAMPLE-JSEXPR/STRING
-  (string-append "{\"apiKey\" : \"" EXAMPLE-API-KEY "\"}"))
 (define CONFIG-DIR-PATH
   (string-append 
    (path->string 
@@ -51,24 +58,65 @@
 (define CONFIG-PATH
   (string-append CONFIG-DIR-PATH "/sufflain-config.json"))
 
-(define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
-(define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))
-(define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
+;; identity-toolkit is a structure.
+;; It contains Google's identity toolkit url.
+;; (identity-toolkit string?)
+(struct identity-toolkit [url])
 
-(module+ test
-  (require rackunit)
-  
-  
-  (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
-                                  #:file-reader-mock   STRING-PORT-MOCK))
-  
-  (test-case "config-exists?"
-             (check-true  (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
-                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/TRUE))
-             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/FALSE
-                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))
-             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
-                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))))
+;; user is a structure.
+;; It contatins user's email and password that are used for authentication.
+;; (user string? string?)
+(struct user [email password])
+
+;; database is a structure.
+;; It contains a URL of the database and an api key.
+;; (database string? string?)
+(struct database [url api-key])
+
+;; college-site is a structure.
+;; It contains a blog url of the college site and regex + XPath for selecting groups.
+;; (college-site string? string? string?)
+(struct college-site [blog-url groups-xpath groups-regex])
+
+;; get-identity-toolit: nothing -> identity-toolkit?
+;; Read identity toolkit info from the config file.
+(define (get-identity-toolkit #:get-config-mock [get-config get-config]) 
+  (let*
+      ([CONFIG (get-config)]
+       [IDENTITY-TOOLKIT     (hash-ref CONFIG           CONFIG-IDENTITY-TOOLKIT-KEY)]
+       [IDENTITY-TOOLKIT-URL (hash-ref IDENTITY-TOOLKIT CONFIG-IDENTITY-TOOLKIT-URL-KEY)])
+    (identity-toolkit IDENTITY-TOOLKIT-URL)))
+
+;; get-user-credentials: nothing -> user?
+;; Read user credentials from the config file.
+(define (get-user-credentials #:get-config-mock [get-config get-config])
+  (let*
+      ([CONFIG   (get-config)]
+       [USER     (hash-ref CONFIG CONFIG-USER-KEY)]
+       [EMAIL    (hash-ref USER   CONFIG-USER-EMAIL-KEY)]
+       [PASSWORD (hash-ref USER   CONFIG-USER-PASSWORD-KEY)])
+    (user EMAIL PASSWORD)))
+
+;; get-database-info: nothing -> database?
+;; Read necessary info about the database from the config file.
+(define (get-database-info #:get-config-mock [get-config get-config]) 
+  (let*
+      ([CONFIG   (get-config)]
+       [DATABASE (hash-ref CONFIG   CONFIG-DATABASE-KEY)]
+       [URL      (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
+       [API-KEY  (hash-ref DATABASE CONFIG-DATABASE-API-KEY)])
+    (database URL API-KEY)))
+
+;; get-college-site-info: nothing -> college-site?
+;; Read college site info from the config site.
+(define (get-college-site-info #:get-config-mock [get-config get-config])
+  (let*
+      ([CONFIG (get-config)]
+       [COLLEGE-SITE (hash-ref CONFIG       CONFIG-COLLEGE-SITE-KEY)]
+       [BLOG-URL     (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-BLOG-URL-KEY)]
+       [GROUPS-XPATH (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY)]
+       [GROUPS-REGEX (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-GROUPS-REGEX-KEY)])
+    (college-site BLOG-URL GROUPS-XPATH GROUPS-REGEX)))
 
 ;; get-config: nothing -> jsexpr
 ;; Reads data from the config file.
@@ -86,8 +134,33 @@
 (define (config-exists? #:dir-check-mock  [directory-exists? directory-exists?]
                         #:file-check-mock [file-exists?      file-exists?])
   (let* 
-      ([CONFIG-DIR-PATH-EXISTS? (directory-exists? CONFIG-DIR-PATH)]
-       [CONFIG-FILE-EXISTS     (if CONFIG-DIR-PATH-EXISTS?
-                                    (file-exists? CONFIG-PATH)
-                                    #f)])
+      ([CONFIG-DIR-EXISTS? (directory-exists? CONFIG-DIR-PATH)]
+       [CONFIG-FILE-EXISTS (if CONFIG-DIR-EXISTS?
+                               (file-exists? CONFIG-PATH)
+                               #f)])
     CONFIG-FILE-EXISTS))
+
+(module+ test
+  (require mock
+           rackunit
+           "shared/mocks.rkt")
+  
+  (define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
+  (define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))
+  (define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
+  
+  (check-pred identity-toolkit? (get-identity-toolkit   #:get-config-mock GET-CONFIG-MOCK))
+  (check-pred user?             (get-user-credentials  #:get-config-mock GET-CONFIG-MOCK))
+  (check-pred database?         (get-database-info     #:get-config-mock GET-CONFIG-MOCK))
+  (check-pred college-site?     (get-college-site-info #:get-config-mock GET-CONFIG-MOCK))
+  
+  (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                  #:file-reader-mock   STRING-PORT-MOCK))
+  
+  (test-case "config-exists?"
+             (check-true  (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/TRUE))
+             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/FALSE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))
+             (check-false (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
+                                          #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/FALSE))))
