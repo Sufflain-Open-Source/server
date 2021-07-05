@@ -26,7 +26,7 @@
 (provide scrape
          regex-select)
 
-;; regex-select: (listof string?) regexp? -> (listof string?)
+;; regex-select: (listof string?) string? -> (listof string?)
 ;; Selects data based on the provided regex.
 (define (regex-select list-of-data rx)
   (let* 
@@ -36,13 +36,13 @@
     (map (lambda (element) 
            (car element)) FILTERED-MATCHES)))
 
-;; scrape: url? txpath? -> (listof string?)
+;; scrape: string? string? -> (listof string?)
 ;; Extracts data from page.
 (define (scrape page-url xpath #:page-mock [get-page get-page])
   (define PAGE-SXML (get-page page-url))
   ((txpath xpath) PAGE-SXML))
 
-;; get-page: url? -> sxml?
+;; get-page: string? -> xexp
 ;; Gets a web page and returns it as an SXML.
 (define (get-page url-string #:tcp-call-mock [call/input-url call/input-url])
   (let* ((URL           (string->url url-string))

@@ -59,7 +59,7 @@
   (string-append CONFIG-DIR-PATH "/sufflain-config.json"))
 
 ;; identity-toolkit is a structure.
-;; It contains Google's identity toolkit url.
+;; It contains Google's Identity Toolkit url.
 ;; (identity-toolkit string?)
 (struct identity-toolkit [url])
 
@@ -69,12 +69,12 @@
 (struct user [email password])
 
 ;; database is a structure.
-;; It contains a URL of the database and an api key.
+;; It contains a URL of the database and an API key.
 ;; (database string? string?)
 (struct database [url api-key])
 
 ;; college-site is a structure.
-;; It contains a blog url of the college site and regex + XPath for selecting groups.
+;; It contains a blog URL of the college site and regex + XPath for selecting groups.
 ;; (college-site string? string? string?)
 (struct college-site [blog-url groups-xpath groups-regex])
 
@@ -133,7 +133,7 @@
 ;; Checks if the config file is present.
 (define (config-exists? #:dir-check-mock  [directory-exists? directory-exists?]
                         #:file-check-mock [file-exists?      file-exists?])
-  (let* 
+  (let*
       ([CONFIG-DIR-EXISTS? (directory-exists? CONFIG-DIR-PATH)]
        [CONFIG-FILE-EXISTS (if CONFIG-DIR-EXISTS?
                                (file-exists? CONFIG-PATH)

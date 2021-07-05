@@ -43,7 +43,7 @@
   (jsexpr->string JSON-PAYLOAD))
 
 ;; post-with-json-payload: string? string? -> jsexpr?
-;; Performs a POST request with JSON in payload and response.
+;; Performs a POST request with JSON payload and response.
 (define (post-with-json-payload url-str json-str #:post-mock [post-pure-port post-pure-port])
   (let* ([URL                  (string->url url-str)]
          [RESPONSE-PORT/STRING (port->string 
