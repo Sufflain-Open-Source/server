@@ -27,16 +27,16 @@
 
 ;; with-json-payload/post: string? string? -> jsexpr?
 (define (with-json-payload/post url-str json-str [request-pure-port post-pure-port])
-  (with-json-payload 'post url-str json-str request-pure-port))
+  (with-json-payload url-str json-str request-pure-port))
 
 ;; with-json-payload/put string? string? -> jsexpr?
 (define (with-json-payload/put url-str json-str [request-pure-port put-pure-port])
-  (with-json-payload 'put url-str json-str request-pure-port))
+  (with-json-payload url-str json-str request-pure-port))
 
 ;; with-json-payload: symbol? string? string? -> jsexpr?
 ;; Perform a POST or a PUT request with JSON payload and response
 (define (with-json-payload 
-            method url-str json-str request-pure-port)
+            url-str json-str request-pure-port)
   (let* ([URL                  (string->url url-str)]
          [RESPONSE-PORT/STRING (port->string 
                                 (request-pure-port URL 

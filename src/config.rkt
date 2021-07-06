@@ -44,13 +44,7 @@
          get-user-credentials
          get-database-info
          get-college-site-info
-         get-config
-         CONFIG-USER-KEY
-         CONFIG-USER-EMAIL-KEY
-         CONFIG-USER-PASSWORD-KEY
-         CONFIG-DATABASE-KEY
-         CONFIG-DATABASE-URL-KEY
-         CONFIG-DATABASE-API-KEY)
+         get-config)
 
 (define CONFIG-DIR-PATH
   (string-append 
@@ -84,7 +78,7 @@
 ;; Read identity toolkit info from the config file.
 (define (get-identity-toolkit #:get-config-mock [get-config get-config]) 
   (let*
-      ([CONFIG (get-config)]
+      ([CONFIG               (get-config)]
        [IDENTITY-TOOLKIT     (hash-ref CONFIG           CONFIG-IDENTITY-TOOLKIT-KEY)]
        [IDENTITY-TOOLKIT-URL (hash-ref IDENTITY-TOOLKIT CONFIG-IDENTITY-TOOLKIT-URL-KEY)])
     (identity-toolkit IDENTITY-TOOLKIT-URL)))
@@ -103,7 +97,7 @@
 ;; Read necessary info about the database from the config file.
 (define (get-database-info #:get-config-mock [get-config get-config]) 
   (let*
-      ([CONFIG   (get-config)]
+      ([CONFIG         (get-config)]
        [DATABASE       (hash-ref CONFIG   CONFIG-DATABASE-KEY)]
        [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
        [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
@@ -115,7 +109,7 @@
 ;; Read college site info from the config site.
 (define (get-college-site-info #:get-config-mock [get-config get-config])
   (let*
-      ([CONFIG (get-config)]
+      ([CONFIG       (get-config)]
        [COLLEGE-SITE (hash-ref CONFIG       CONFIG-COLLEGE-SITE-KEY)]
        [BLOG-URL     (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-BLOG-URL-KEY)]
        [GROUPS-XPATH (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY)]
