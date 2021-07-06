@@ -19,13 +19,17 @@
 
 (require "keys.rkt"
          racket/function
-         mock)
+         mock
+         json)
 
 (provide (all-defined-out))
 
 (define EXAMPLE-API-KEY "XhfT4ih0k7!")
 (define EXAMPLE-JSEXPR/STRING
   (string-append "{\"apiKey\" : \"" EXAMPLE-API-KEY "\"}"))
+(define EXAMPLE-JSEXPR
+  (string->jsexpr EXAMPLE-JSEXPR/STRING))
+
 (define GET-CONFIG-MOCK 
   (mock #:behavior 
         (const
@@ -35,8 +39,10 @@
              ,(make-immutable-hasheq `((,CONFIG-IDENTITY-TOOLKIT-URL-KEY . "https://identity.url"))))
             (,CONFIG-DATABASE-KEY
              .
-             ,(make-immutable-hasheq `((,CONFIG-DATABASE-URL-KEY . "https://ourdb.app")
-                                       (,CONFIG-DATABASE-API-KEY . "uioy568y7"))))
+             ,(make-immutable-hasheq `((,CONFIG-DATABASE-URL-KEY            . "https://ourdb.app")
+                                       (,CONFIG-DATABASE-API-KEY            . "uioy568y7")
+                                       (,CONFIG-DATABASE-GROUPS-PATH-KEY    . "/g")
+                                       (,CONFIG-DATABASE-TIMETABLE-PATH-KEY . "/t"))))
             (,CONFIG-USER-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-USER-EMAIL-KEY    . "bruhmail@yeah.lol")

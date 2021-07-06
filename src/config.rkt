@@ -17,10 +17,10 @@
 
 #lang racket/base
 
-(require json
+(require "shared/keys.rkt"
+         json
          racket/function
-         racket/port
-         "shared/keys.rkt")
+         racket/port)
 
 (provide identity-toolkit
          identity-toolkit?
@@ -33,6 +33,8 @@
          database?
          database-url
          database-api-key
+         database-groups-path
+         database-timetable-path
          college-site
          college-site?
          college-site-blog-url
@@ -70,8 +72,8 @@
 
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
-;; (database string? string?)
-(struct database [url api-key])
+;; (database string? string? string? string?)
+(struct database [url api-key groups-path timetable-path])
 
 ;; college-site is a structure.
 ;; It contains a blog URL of the college site and regex + XPath for selecting groups.
@@ -102,10 +104,12 @@
 (define (get-database-info #:get-config-mock [get-config get-config]) 
   (let*
       ([CONFIG   (get-config)]
-       [DATABASE (hash-ref CONFIG   CONFIG-DATABASE-KEY)]
-       [URL      (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
-       [API-KEY  (hash-ref DATABASE CONFIG-DATABASE-API-KEY)])
-    (database URL API-KEY)))
+       [DATABASE       (hash-ref CONFIG   CONFIG-DATABASE-KEY)]
+       [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
+       [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
+       [GROUPS-PATH    (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
+       [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)])
+    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH)))
 
 ;; get-college-site-info: nothing -> college-site?
 ;; Read college site info from the config site.
@@ -119,7 +123,7 @@
     (college-site BLOG-URL GROUPS-XPATH GROUPS-REGEX)))
 
 ;; get-config: nothing -> jsexpr
-;; Reads data from the config file.
+;; Read data from the config file.
 (define (get-config #:config-exists-mock [config-exists? config-exists?]
                     #:file-reader-mock   [port->string   port->string])
   (define FILE-PORT (if (config-exists?)
@@ -130,7 +134,7 @@
       (read-json FILE-PORT)))
 
 ;; config-exists?: nothing -> boolean?
-;; Checks if the config file is present.
+;; Check if the config file is present.
 (define (config-exists? #:dir-check-mock  [directory-exists? directory-exists?]
                         #:file-check-mock [file-exists?      file-exists?])
   (let*
@@ -141,9 +145,9 @@
     CONFIG-FILE-EXISTS))
 
 (module+ test
-  (require mock
-           rackunit
-           "shared/mocks.rkt")
+  (require "shared/mocks.rkt"
+           mock
+           rackunit)
   
   (define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
   (define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))

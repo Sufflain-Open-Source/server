@@ -17,10 +17,13 @@
 
 #lang racket/base
 
-(require json
-         racket/function
-         "scraper.rkt"
-         "config.rkt")
+(require "scraper.rkt"
+         "config.rkt"
+         json
+         racket/function)
+
+(provide group-list-to-json
+         extract-groups-from-page)
 
 ;; group-list is one of:
 ;;  - null
@@ -30,12 +33,12 @@
 ;;  '("СА21-19" "ИБ31-18")
 
 ;; group-list-to-json: group-list -> string?
-;; Creates a JSON string with a list of groups.
+;; Create a JSON string with a list of groups.
 (define (group-list-to-json groups)
   (jsexpr->string groups))
 
 ;; extract-groups-from-page: string? -> group-list
-;; Finds groups on a page with timetable.
+;; Find groups on a page with timetable.
 (define (extract-groups-from-page url-str
                                   #:scrape-mock [scrape scrape]
                                   #:get-college-site-info-mock [get-college-site-info 
@@ -48,9 +51,9 @@
     (regex-select SCRAPED-DATA GROUPS-REGEX)))
 
 (module+ test
-  (require rackunit
-           mock
-           "shared/mocks.rkt")
+  (require "shared/mocks.rkt"
+           rackunit
+           mock)
   
   (check-equal? (group-list-to-json '("СА21-19" "ИБ31-18")) "[\"СА21-19\",\"ИБ31-18\"]")
   

@@ -8,7 +8,9 @@
     },
     "database": {
         "url": "",
-        "apiKey": ""
+        "apiKey": "",
+        "groupsPath": "",
+        "timetablePath": ""
     },
     "collegeSite": {
         "blogUrl": "",

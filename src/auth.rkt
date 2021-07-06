@@ -18,23 +18,24 @@
 #lang racket/base
 
 (require "config.rkt"
+         "requests.rkt"
          racket/function
-         racket/port
-         net/url
          json)
 
+(provide get-token)
+
 ;; get-token: string? string? -> string?
-;; Gets a sign in token for the database.
+;; Get a sign in token for the database.
 (define (get-token email password
-                   #:json-post-mock [post-with-json-payload post-with-json-payload])
+                   #:json-post-mock [with-json-payload/post with-json-payload/post])
   (let* ([API-KEY  (database-api-key (get-database-info))]
          [URL-STR  (string-append (identity-toolkit-url (get-identity-toolkit)) API-KEY)]
          [PAYLOAD  (construct-sign-in-payload email password)]
-         [RESPONSE (post-with-json-payload URL-STR PAYLOAD)])
+         [RESPONSE (with-json-payload/post URL-STR PAYLOAD)])
     (hash-ref RESPONSE 'idToken)))
 
 ;; construct-sign-in-payload: string? string? -> string?
-;; Creates a JSON string for auth requests.
+;; Create a JSON string for auth requests.
 (define (construct-sign-in-payload email password)
   (define JSON-PAYLOAD
     (make-immutable-hasheq `((email             . ,email)
@@ -42,23 +43,10 @@
                              (returnSecureToken . #t))))
   (jsexpr->string JSON-PAYLOAD))
 
-;; post-with-json-payload: string? string? -> jsexpr?
-;; Performs a POST request with JSON payload and response.
-(define (post-with-json-payload url-str json-str #:post-mock [post-pure-port post-pure-port])
-  (let* ([URL                  (string->url url-str)]
-         [RESPONSE-PORT/STRING (port->string 
-                                (post-pure-port URL 
-                                                (string->bytes/utf-8 json-str) 
-                                                '("Content-Type: application/json")))])
-    (string->jsexpr RESPONSE-PORT/STRING)))
-
 (module+ test
   (require rackunit
-           mock
-           "shared/mocks.rkt")
+           mock)
   
-  (define EXAMPLE-JSEXPR
-    (string->jsexpr EXAMPLE-JSEXPR/STRING))
   (define EXAMPLE-TOKEN "fbcpent64")
   (define EXAMPLE-AUTH-RESPONSE
     (string->jsexpr
@@ -67,9 +55,6 @@
   (define POST-RESPONSE-MOCK
     (mock #:behavior (const EXAMPLE-AUTH-RESPONSE)))
   
-  (define (make-post-mock . args)
-    (open-input-string EXAMPLE-JSEXPR/STRING))
-  
   (check-equal? EXAMPLE-TOKEN
                 (get-token "testmail@example.xd"
                            "1234509876"
@@ -77,14 +62,4 @@
   
   (check-equal? 
    (construct-sign-in-payload "testmail@example.xd" "1234509876")
-   "{\"email\":\"testmail@example.xd\",\"password\":\"1234509876\",\"returnSecureToken\":true}")
-  
-  (test-case "post-with-json-payload"
-             (check-pred jsexpr? 
-                         (post-with-json-payload "https://example.mock" 
-                                                 "true" 
-                                                 #:post-mock make-post-mock))
-             (check-equal? EXAMPLE-JSEXPR
-                           (post-with-json-payload "https://example.mock" 
-                                                   "true"
-                                                   #:post-mock make-post-mock))))
+   "{\"email\":\"testmail@example.xd\",\"password\":\"1234509876\",\"returnSecureToken\":true}"))
