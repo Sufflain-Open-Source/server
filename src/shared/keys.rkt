@@ -33,6 +33,7 @@
 (define CONFIG-DATABASE-TIMETABLE-PATH-KEY 'timetablePath)
 
 (define CONFIG-COLLEGE-SITE-KEY              'collegeSite)
-(define CONFIG-COLLEGE-SITE-BLOG-URL-KEY     'blogUrl)
+(define CONFIG-COLLEGE-SITE-URL-KEY          'url)
+(define CONFIG-COLLEGE-SITE-BLOG-PATH-KEY    'blogPath)
 (define CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY 'groupsXpath)
 (define CONFIG-COLLEGE-SITE-GROUPS-REGEX-KEY 'groupsRegex)

@@ -49,7 +49,8 @@
                                        (,CONFIG-USER-PASSWORD-KEY . "8543873487"))))
             (,CONFIG-COLLEGE-SITE-KEY
              .
-             ,(make-immutable-hasheq `((,CONFIG-COLLEGE-SITE-BLOG-URL-KEY     . "https://college.site")
+             ,(make-immutable-hasheq `((,CONFIG-COLLEGE-SITE-URL-KEY       . "https://college.site")
+                                       (,CONFIG-COLLEGE-SITE-BLOG-PATH-KEY . "/blog")
                                        (,CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY 
                                         . 
                                         "//tbody//p/strong/text()")

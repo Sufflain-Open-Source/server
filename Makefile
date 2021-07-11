@@ -15,5 +15,5 @@ test:
 
 clean:
 	if [ -d "$(BUILD)" ]; then\
-	 rm -r build ; \
+	 rm -r $(BUILD) ; \
 	fi

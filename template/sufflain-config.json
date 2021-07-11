@@ -13,7 +13,8 @@
         "timetablePath": ""
     },
     "collegeSite": {
-        "blogUrl": "",
+        "url": "",
+        "blogPath": "",
         "groupsXpath": "",
         "groupsRegex": ""
     }
