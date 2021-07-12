@@ -32,7 +32,8 @@
 
 ;; select-blog-posts: xexpr -> (listof blog-post)
 ;; Select blog posts from the blog page SXML.
-(define (select-blog-posts blog-page)
+(define (select-blog-posts blog-page 
+                           #:get-college-site-info-mock [get-college-site-info get-college-site-info])
   (let
       ([BLOG-POSTS    ((txpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
        [get-by-xpath  (lambda (xpath element)
@@ -47,7 +48,14 @@
         (blog-post TITLE FULL-LINK)))))
 
 (module+ test
-  (require rackunit)
+  (require rackunit
+           mock
+           racket/function)
+  
+  (define COLLEGE-SITE-INFO-MOCK
+    (mock #:behavior 
+          (const
+           (college-site "https://example.url" "" "" ""))))
   
   ;; Scraped from the blog page
   (define BLOG-MOCK
@@ -81,11 +89,18 @@
   (test-case "select-blog-posts"
              (define EXAMPLE-BLOG-POST
                (blog-post "Расписание занятий на 2 июля 2021 г."
-                          "https://cbcol.mskobr.ru/elektronnye_servisy/blog/\
+                          "https://example.url/elektronnye_servisy/blog/\
 uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g"))
              
-             (check-pred null? (select-blog-posts null))
-             (check-equal? (blog-post-title (car (select-blog-posts BLOG-MOCK)))
+             (check-pred null? (select-blog-posts null 
+                                                  #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK))
+             (check-equal? (blog-post-title 
+                            (car 
+                             (select-blog-posts BLOG-MOCK
+                                                #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-title EXAMPLE-BLOG-POST))
-             (check-equal? (blog-post-link (car (select-blog-posts BLOG-MOCK)))
+             (check-equal? (blog-post-link 
+                            (car 
+                             (select-blog-posts BLOG-MOCK
+                                                #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-link EXAMPLE-BLOG-POST))))
