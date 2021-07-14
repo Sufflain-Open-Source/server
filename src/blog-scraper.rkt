@@ -107,7 +107,7 @@
 ;; Select data from the provided <tbody>.
 (define (select-from-tbody tbody xpath regex)
   (let*
-      ([SELECTED-BY-XPATH                ((txpath xpath) tbody)]
+      ([SELECTED-BY-XPATH                ((sxpath xpath) tbody)]
        [SELECTED-BY-XPATH/LIST-OF-STRING (for/list ([element SELECTED-BY-XPATH])
                                            (srl:sxml->html element))])
     (map string-trim (regex-select SELECTED-BY-XPATH/LIST-OF-STRING regex))))
@@ -115,17 +115,17 @@
 ;; select-tbodys: xexpr -> (listof xexpr)
 ;; Select <tbody>s from the timetable page.
 (define (select-tbodys page)
-  ((txpath "//table[@border=\"1\"]/tbody") page))
+  ((sxpath "//table[@border=\"1\"]/tbody") page))
 
 ;; select-blog-posts: xexpr -> (listof blog-post)
 ;; Select blog posts from the blog page SXML.
 (define (select-blog-posts blog-page 
                            #:get-college-site-info-mock [get-college-site-info get-college-site-info])
   (let
-      ([BLOG-POSTS    ((txpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
+      ([BLOG-POSTS    ((sxpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
        [get-by-xpath  (lambda (xpath element)
                         (car 
-                         ((txpath xpath) element)))])
+                         ((sxpath xpath) element)))])
     (for/list ([element BLOG-POSTS])
       (let*
           ([TITLE         (get-by-xpath TITLE-XPATH element)]

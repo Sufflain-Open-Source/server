@@ -40,7 +40,7 @@
 ;; Extract data from page.
 (define (scrape page-url xpath #:page-mock [get-page get-page])
   (define PAGE-SXML (get-page page-url))
-  ((txpath xpath) PAGE-SXML))
+  ((sxpath xpath) PAGE-SXML))
 
 ;; get-page: string? -> xexp
 ;; Get a web page and returns it as an SXML.
