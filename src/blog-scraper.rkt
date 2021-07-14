@@ -41,6 +41,14 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
+;; select-all-groups-timetables: xexpr -> (listof group-timetable?)
+;; Select all timetabes on page.
+(define (select-all-groups-timetables page)
+  (let* ([TBODYS             (select-tbodys page)]
+         [GROUPED-TIMETABLES (map (lambda (tbody)
+                                    (select-groups-timetables tbody)) TBODYS)])
+    (foldr append null GROUPED-TIMETABLES)))
+
 ;; select-groups-timetables: xexpr -> (listof group-timetable?)
 ;; Select timetables for each group.
 (define (select-groups-timetables tbody)
@@ -185,6 +193,9 @@
        (tr
         (td (p "11.15 " (&ndash) " 12.30"))
         (td (p "Lesson data"))))))
+  
+  (check-pred (lambda (result)
+                (andmap group-timetable? result)) (select-all-groups-timetables EXAMPLE-TIMETABLE-PAGE))
   
   (test-case "select-groups-timetables"
              (check-equal? (select-groups-timetables null) null)

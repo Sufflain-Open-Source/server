@@ -24,7 +24,8 @@
          html-parsing)
 
 (provide scrape
-         regex-select)
+         regex-select
+         get-page)
 
 ;; regex-select: (listof string?) string? -> (listof string?)
 ;; Select data based on the provided regex.
