@@ -27,6 +27,8 @@
 ;; get-token: string? string? -> string?
 ;; Get a sign in token for the database.
 (define (get-token email password
+                   #:db-info-mock [get-database-info get-database-info]
+                   #:identity-toolkit-mock [get-identity-toolkit get-identity-toolkit]
                    #:json-post-mock [with-json-payload/post with-json-payload/post])
   (let* ([API-KEY  (database-api-key (get-database-info))]
          [URL-STR  (string-append (identity-toolkit-url (get-identity-toolkit)) API-KEY)]
@@ -54,10 +56,16 @@
   
   (define POST-RESPONSE-MOCK
     (mock #:behavior (const EXAMPLE-AUTH-RESPONSE)))
+  (define DB-INFO-MOCK
+    (mock #:behavior (const (database "" "k3y" "" ""))))
+  (define IDENTITY-TOOLKIT-MOCK
+    (mock #:behavior (const (identity-toolkit "url"))))
   
   (check-equal? EXAMPLE-TOKEN
                 (get-token "testmail@example.xd"
                            "1234509876"
+                           #:db-info-mock DB-INFO-MOCK
+                           #:identity-toolkit-mock IDENTITY-TOOLKIT-MOCK
                            #:json-post-mock POST-RESPONSE-MOCK))
   
   (check-equal? 
