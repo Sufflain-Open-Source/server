@@ -32,7 +32,32 @@
 ;; (blog-post string? string?)
 (struct blog-post [title link])
 
-;; select-lessons-data: tbody -> (listof (listof xexpr?))
+;; lesson is a structure.
+;; It contains info about lesson.
+(struct lesson [time data])
+
+;; group-timetable is a structure.
+;; It contains a title with the group id and data about lessons for a specific day.
+;; (timetable string? (listof lesson?))
+(struct group-timetable [title lessons])
+
+;; select-groups-timetables: xexpr -> (listof group-timetable?)
+;; Select timetables for each group.
+(define (select-groups-timetables tbody)
+  (let*
+      ([TITLES            (select-titles tbody)]
+       [TIME              (select-time tbody)]
+       [LESSONS-DATA      (select-lessons-data tbody)]
+       [LESSONS-WITH-TIME (map (lambda (lessons)
+                                 (for/list ([lesson-data lessons]
+                                            [lesson-time TIME])
+                                   (lesson lesson-time lesson-data))) LESSONS-DATA)]
+       [GROUPS-TIMETABLES (for/list ([group-lessons LESSONS-WITH-TIME]
+                                     [title         TITLES])
+                            (group-timetable title group-lessons))])
+    GROUPS-TIMETABLES))
+
+;; select-lessons-data: xexpr -> (listof (listof xexpr?))
 ;; Select info about each lesson. The result is a list of <td>s.
 (define (select-lessons-data tbody)
   (if (null? tbody)
@@ -160,6 +185,22 @@
        (tr
         (td (p "11.15 " (&ndash) " 12.30"))
         (td (p "Lesson data"))))))
+  
+  (test-case "select-groups-timetables"
+             (check-equal? (select-groups-timetables null) null)
+             (check-equal? (lesson-time (cadr 
+                                         (group-timetable-lessons 
+                                          (cadr
+                                           (select-groups-timetables EXAMPLE-TBODY)))))
+                           "11.00 &ndash; 12.30")
+             (check-equal? (group-timetable-title (cadddr (select-groups-timetables EXAMPLE-TBODY)))
+                           "ИБ11-20 ауд.305")
+             (check-equal? ((sxpath "//p[1]/text()")
+                            (lesson-data (cadr 
+                                          (group-timetable-lessons 
+                                           (cadddr 
+                                            (select-groups-timetables EXAMPLE-TBODY))))))
+                           '("Химия")))
   
   (test-case "select-lessons-data"
              (check-equal? (select-lessons-data null) null)
