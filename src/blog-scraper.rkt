@@ -34,6 +34,7 @@
 
 ;; lesson is a structure.
 ;; It contains info about lesson.
+;; (lesson string? (listof string?))
 (struct lesson [time data])
 
 ;; group-timetable is a structure.
@@ -56,10 +57,18 @@
       ([TITLES            (select-titles tbody)]
        [TIME              (select-time tbody)]
        [LESSONS-DATA      (select-lessons-data tbody)]
+       [not-null?         (lambda (val)
+                            (not (null? val)))]
+       [LESSONS-DATA-RAW  (map (lambda (ld)
+                                 (filter not-null?
+                                         (map (lambda (element)
+                                                (map string-trim 
+                                                     ((sxpath "//p/text()") element))) ld))) 
+                               LESSONS-DATA)]
        [LESSONS-WITH-TIME (map (lambda (lessons)
                                  (for/list ([lesson-data lessons]
                                             [lesson-time TIME])
-                                   (lesson lesson-time lesson-data))) LESSONS-DATA)]
+                                   (lesson lesson-time lesson-data))) LESSONS-DATA-RAW)]
        [GROUPS-TIMETABLES (for/list ([group-lessons LESSONS-WITH-TIME]
                                      [title         TITLES])
                             (group-timetable title group-lessons))])
@@ -206,12 +215,12 @@
                            "11.00 &ndash; 12.30")
              (check-equal? (group-timetable-title (cadddr (select-groups-timetables EXAMPLE-TBODY)))
                            "ИБ11-20 ауд.305")
-             (check-equal? ((sxpath "//p[1]/text()")
+             (check-equal? (car
                             (lesson-data (cadr 
                                           (group-timetable-lessons 
                                            (cadddr 
                                             (select-groups-timetables EXAMPLE-TBODY))))))
-                           '("Химия")))
+                           "Химия"))
   
   (test-case "select-lessons-data"
              (check-equal? (select-lessons-data null) null)
