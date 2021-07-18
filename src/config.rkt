@@ -39,8 +39,6 @@
          college-site?
          college-site-url
          college-site-blog-path
-         college-site-groups-xpath
-         college-site-groups-regex
          get-identity-toolkit
          get-user-credentials
          get-database-info
@@ -71,9 +69,9 @@
 (struct database [url api-key groups-path timetable-path])
 
 ;; college-site is a structure.
-;; It contains a site URL, a blog path and regex + XPath for selecting groups.
+;; It contains a site URL and a blog path.
 ;; (college-site string? string? string? string?)
-(struct college-site [url blog-path groups-xpath groups-regex])
+(struct college-site [url blog-path])
 
 ;; get-identity-toolit: nothing -> identity-toolkit?
 ;; Read identity toolkit info from the config file.
@@ -113,10 +111,8 @@
       ([CONFIG       (get-config)]
        [COLLEGE-SITE (hash-ref CONFIG       CONFIG-COLLEGE-SITE-KEY)]
        [URL          (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-URL-KEY)]
-       [BLOG-PATH    (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-BLOG-PATH-KEY)]
-       [GROUPS-XPATH (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY)]
-       [GROUPS-REGEX (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-GROUPS-REGEX-KEY)])
-    (college-site URL BLOG-PATH  GROUPS-XPATH GROUPS-REGEX)))
+       [BLOG-PATH    (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-BLOG-PATH-KEY)])
+    (college-site URL BLOG-PATH)))
 
 ;; get-config: nothing -> jsexpr
 ;; Read data from the config file.

@@ -18,6 +18,7 @@
 #lang racket/base
 
 (require "keys.rkt"
+         "const.rkt"
          racket/function
          mock
          json)
@@ -889,10 +890,4 @@
             (,CONFIG-COLLEGE-SITE-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-COLLEGE-SITE-URL-KEY       . "https://college.site")
-                                       (,CONFIG-COLLEGE-SITE-BLOG-PATH-KEY . "/blog")
-                                       (,CONFIG-COLLEGE-SITE-GROUPS-XPATH-KEY 
-                                        . 
-                                        "//tbody//p/strong/text()")
-                                       (,CONFIG-COLLEGE-SITE-GROUPS-REGEX-KEY 
-                                        . 
-                                        "\\S{1,2}\\d{2}-\\d{2}")))))))))
+                                       (,CONFIG-COLLEGE-SITE-BLOG-PATH-KEY . "/blog")))))))))

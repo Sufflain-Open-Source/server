@@ -19,6 +19,7 @@
 
 (require "scraper.rkt"
          "config.rkt"
+         "shared/const.rkt"
          json
          racket/function)
 
@@ -45,9 +46,7 @@
                                                                 get-college-site-info])
   (let*
       ([COLLEGE-SITE (get-college-site-info)]
-       [GROUPS-REGEX (college-site-groups-regex COLLEGE-SITE)]
-       [GROUPS-XPATH (college-site-groups-xpath COLLEGE-SITE)]
-       [SCRAPED-DATA (scrape url-str GROUPS-XPATH)])
+       [SCRAPED-DATA (scrape url-str GROUP-TIMETABLE-TITLE-XPATH)])
     (regex-select SCRAPED-DATA GROUPS-REGEX)))
 
 (module+ test

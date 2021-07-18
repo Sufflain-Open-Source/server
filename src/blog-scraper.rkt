@@ -19,6 +19,7 @@
 
 (require "scraper.rkt"
          "config.rkt"
+         "shared/const.rkt"
          sxml
          racket/string)
 
@@ -126,13 +127,13 @@
 ;; Titles on the site are formatted inconsistently.
 ;; All of them have one thing in common — a group id.
 (define (select-titles tbody)
-  (select-from-tbody tbody "//p/strong/text()" "\\S{1,2}\\d{2}-\\d{2}.*"))
+  (select-from-tbody tbody GROUP-TIMETABLE-TITLE-XPATH (string-append GROUPS-REGEX ".*")))
 
 ;; select-time: xexpr -> time-list
 ;; Select the time when classes start and end.
 ;; Time is formatted as hh \u2013 mm.
 (define (select-time tbody)
-  (select-from-tbody tbody "//tr/td/p" "\\d{2}.\\d{2}\\s\\&ndash;\\s\\d{2}.\\d{2}"))
+  (select-from-tbody tbody "//tr/td/p" TIME-REGEX))
 
 ;; select-from-tbody: xexpr string? string? -> (listof string?)
 ;; Select data from the provided <tbody>.
@@ -146,7 +147,7 @@
 ;; select-tbodys: xexpr -> (listof xexpr)
 ;; Select <tbody>s from the timetable page.
 (define (select-tbodys page)
-  ((sxpath "//table[@border=\"1\"]/tbody") page))
+  ((sxpath TIMETABLE-TBODY-XPATH) page))
 
 ;; select-blog-posts: xexpr -> (listof blog-post)
 ;; Select blog posts from the blog page SXML.
@@ -174,7 +175,7 @@
   (define COLLEGE-SITE-INFO-MOCK
     (mock #:behavior 
           (const
-           (college-site "https://example.url" "" "" ""))))
+           (college-site "https://example.url" ""))))
   
   ;; Scraped from the blog page
   (define EXAMPLE-BLOG

@@ -19,19 +19,10 @@
 
 (provide (all-defined-out))
 
-(define CONFIG-IDENTITY-TOOLKIT-KEY     'identityToolkit)
-(define CONFIG-IDENTITY-TOOLKIT-URL-KEY 'url)
+(define GROUP-TIMETABLE-TITLE-XPATH "//p/strong/text()")
 
-(define CONFIG-USER-KEY          'user)
-(define CONFIG-USER-EMAIL-KEY    'email)
-(define CONFIG-USER-PASSWORD-KEY 'password)
+(define GROUPS-REGEX "\\S{1,2}\\d{2}-\\d{2}")
 
-(define CONFIG-DATABASE-KEY                'database)
-(define CONFIG-DATABASE-URL-KEY            'url)
-(define CONFIG-DATABASE-API-KEY            'apiKey)
-(define CONFIG-DATABASE-GROUPS-PATH-KEY    'groupsPath)
-(define CONFIG-DATABASE-TIMETABLE-PATH-KEY 'timetablePath)
+(define TIME-REGEX "\\d{2}.\\d{2}\\s\\&ndash;\\s\\d{2}.\\d{2}")
 
-(define CONFIG-COLLEGE-SITE-KEY              'collegeSite)
-(define CONFIG-COLLEGE-SITE-URL-KEY          'url)
-(define CONFIG-COLLEGE-SITE-BLOG-PATH-KEY    'blogPath)
+(define TIMETABLE-TBODY-XPATH "//table[@border=\"1\"]/tbody")
