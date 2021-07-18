@@ -43,13 +43,25 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
+;; all-groups-timetables-as-jsexpr: string? (listof jsexpr)
+;; Convert timetables for all groups to jsexpr.
+(define (all-groups-timetables-as-jsexpr link-title timetables)
+  (map (lambda (timetable)
+         (group-timetable-as-jsexpr link-title 
+                                    (group-timetable-title timetable)
+                                    (group-timetable-lessons timetable))) timetables))
+
 ;; group-timetable-as-jsexpr: string? (listof lesson?)
 ;; Make a jsexpr with timetable contents.
 (define (group-timetable-as-jsexpr link-title title lessons)
-  (define LESSONS/JSEXPR (map lesson->jsexpr lessons))
-  (make-immutable-hasheq `((linkTitle . ,link-title)
-                           (title     . ,title)
-                           (lessons   . ,LESSONS/JSEXPR))))
+  (let ([LESSONS/JSEXPR (map lesson->jsexpr lessons)]
+        [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) title))])
+    (make-immutable-hasheq `((,(string->symbol GROUP-ID)
+                              .
+                              ,(make-immutable-hasheq `((,(string->symbol link-title)
+                                                         .
+                                                         ,(make-immutable-hasheq `((title   . ,title)
+                                                                                   (lessons . ,LESSONS/JSEXPR)))))))))))
 
 ;; lesson->jsexpr: lesson? -> jsexpr
 ;; Make a jsexpr with a lesson info.
@@ -218,16 +230,35 @@
         (td (p "11.15 " (&ndash) " 12.30"))
         (td (p "Lesson data"))))))
   
-  (test-case "group-timetable-as-jsexpr"
-             (define EXAMPLE-LESSON (lesson "10.00 &ndash; 11.00" '("КС")))
-             (define EXAMPLE-LESSON/JSEXPR (lesson->jsexpr EXAMPLE-LESSON))
-             
-             (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
-                                                      "СА21-19 ауд.304" 
-                                                      `(,EXAMPLE-LESSON))
-                           (make-immutable-hasheq `((linkTitle . "Расписание на ... дату")
-                                                    (title     . "СА21-19 ауд.304")
-                                                    (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))
+  (define EXAMPLE-LESSON (lesson "10.00 &ndash; 11.00" '("КС")))
+  (define EXAMPLE-LESSON/JSEXPR (lesson->jsexpr EXAMPLE-LESSON))
+  
+  (check-equal? 
+   (all-groups-timetables-as-jsexpr
+    "Расписание на ... дату"
+    (list (group-timetable "СА21-19 ауд.304"
+                           `(,EXAMPLE-LESSON))))
+   (list
+    (make-immutable-hasheq 
+     `((СА21-19
+        .
+        ,(make-immutable-hasheq `((|Расписание на ... дату|
+                                   . 
+                                   ,(make-immutable-hasheq 
+                                     `((title     . "СА21-19 ауд.304")
+                                       (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))))))))
+  
+  (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
+                                           "СА21-19 ауд.304" 
+                                           `(,EXAMPLE-LESSON))
+                (make-immutable-hasheq 
+                 `((СА21-19
+                    .
+                    ,(make-immutable-hasheq `((|Расписание на ... дату|
+                                               .
+                                               ,(make-immutable-hasheq 
+                                                 `((title     . "СА21-19 ауд.304")
+                                                   (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))))))))
   
   (check-equal? (lesson->jsexpr (lesson "11.15 &ndash; 12.30" '("Предмет")))
                 #hasheq((time . "11.15 &ndash; 12.30")
