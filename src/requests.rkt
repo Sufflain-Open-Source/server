@@ -22,33 +22,48 @@
           racket/port
           json)
 
-(provide with-json-payload/post
+(provide http-delete
+         http-get
+         with-json-payload/post
          with-json-payload/put)
+
+;; http-delete: string? -> jsexpr?
+(define (http-delete url-str [request-pure-port delete-pure-port])
+  (http-request url-str delete-pure-port))
+
+;; get: string? -> jsexpr?
+(define (http-get url-str [request-pure-port get-pure-port])
+  (http-request url-str request-pure-port))
 
 ;; with-json-payload/post: string? string? -> jsexpr?
 (define (with-json-payload/post url-str json-str [request-pure-port post-pure-port])
-  (with-json-payload url-str json-str request-pure-port))
+  (http-request url-str #:json-payload json-str request-pure-port))
 
 ;; with-json-payload/put string? string? -> jsexpr?
 (define (with-json-payload/put url-str json-str [request-pure-port put-pure-port])
-  (with-json-payload url-str json-str request-pure-port))
+  (http-request url-str #:json-payload json-str request-pure-port))
 
 ;; with-json-payload: symbol? string? string? -> jsexpr?
-;; Perform a POST or a PUT request with JSON payload and response
-(define (with-json-payload 
-            url-str json-str request-pure-port)
+;; Perform an HTTP request with/without JSON payload.
+(define (http-request url-str #:json-payload [json-str null] request-pure-port)
   (let* ([URL                  (string->url url-str)]
          [RESPONSE-PORT/STRING (port->string 
-                                (request-pure-port URL 
-                                                   (string->bytes/utf-8 json-str) 
-                                                   '("Content-Type: application/json")))])
+                                (if (equal? json-str null)
+                                    (request-pure-port URL)
+                                    (request-pure-port URL
+                                                       (string->bytes/utf-8 json-str) 
+                                                       '("Content-Type: application/json"))))])
     (string->jsexpr RESPONSE-PORT/STRING)))
 
 (module+ test
-  (require rackunit)
+  (require "shared/mocks.rkt"
+           rackunit)
   
   (define (make-post-mock . args)
     (open-input-string EXAMPLE-JSEXPR/STRING))
+  
+  (check-equal? (http-get "" get-groups-mock)
+                '("СА21-19"))
   
   (test-case "with-json-payload/post"
              (check-pred jsexpr? 

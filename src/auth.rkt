@@ -26,12 +26,12 @@
 
 ;; get-token: string? string? -> string?
 ;; Get a sign in token for the database.
-(define (get-token email password
+(define (get-token email password config
                    #:db-info-mock [get-database-info get-database-info]
                    #:identity-toolkit-mock [get-identity-toolkit get-identity-toolkit]
                    #:json-post-mock [with-json-payload/post with-json-payload/post])
-  (let* ([API-KEY  (database-api-key (get-database-info))]
-         [URL-STR  (string-append (identity-toolkit-url (get-identity-toolkit)) API-KEY)]
+  (let* ([API-KEY  (database-api-key (get-database-info config))]
+         [URL-STR  (string-append (identity-toolkit-url (get-identity-toolkit config)) API-KEY)]
          [PAYLOAD  (construct-sign-in-payload email password)]
          [RESPONSE (with-json-payload/post URL-STR PAYLOAD)])
     (hash-ref RESPONSE 'idToken)))
@@ -46,7 +46,8 @@
   (jsexpr->string JSON-PAYLOAD))
 
 (module+ test
-  (require rackunit
+  (require "shared/mocks.rkt"
+           rackunit
            mock)
   
   (define EXAMPLE-TOKEN "fbcpent64")
@@ -64,6 +65,7 @@
   (check-equal? EXAMPLE-TOKEN
                 (get-token "testmail@example.xd"
                            "1234509876"
+                           (GET-CONFIG-MOCK)
                            #:db-info-mock DB-INFO-MOCK
                            #:identity-toolkit-mock IDENTITY-TOOLKIT-MOCK
                            #:json-post-mock POST-RESPONSE-MOCK))

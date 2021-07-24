@@ -73,43 +73,39 @@
 ;; (college-site string? string? string? string?)
 (struct college-site [url blog-path])
 
-;; get-identity-toolit: nothing -> identity-toolkit?
+;; get-identity-toolit: jsexpr? -> identity-toolkit?
 ;; Read identity toolkit info from the config file.
-(define (get-identity-toolkit #:get-config-mock [get-config get-config]) 
+(define (get-identity-toolkit config)
   (let*
-      ([CONFIG               (get-config)]
-       [IDENTITY-TOOLKIT     (hash-ref CONFIG           CONFIG-IDENTITY-TOOLKIT-KEY)]
+      ([IDENTITY-TOOLKIT     (hash-ref config           CONFIG-IDENTITY-TOOLKIT-KEY)]
        [IDENTITY-TOOLKIT-URL (hash-ref IDENTITY-TOOLKIT CONFIG-IDENTITY-TOOLKIT-URL-KEY)])
     (identity-toolkit IDENTITY-TOOLKIT-URL)))
 
-;; get-user-credentials: nothing -> user?
+;; get-user-credentials: jsexpr? -> user?
 ;; Read user credentials from the config file.
-(define (get-user-credentials #:get-config-mock [get-config get-config])
+(define (get-user-credentials config)
   (let*
-      ([CONFIG   (get-config)]
-       [USER     (hash-ref CONFIG CONFIG-USER-KEY)]
+      ([USER     (hash-ref config CONFIG-USER-KEY)]
        [EMAIL    (hash-ref USER   CONFIG-USER-EMAIL-KEY)]
        [PASSWORD (hash-ref USER   CONFIG-USER-PASSWORD-KEY)])
     (user EMAIL PASSWORD)))
 
-;; get-database-info: nothing -> database?
+;; get-database-info: jsexpr? -> database?
 ;; Read necessary info about the database from the config file.
-(define (get-database-info #:get-config-mock [get-config get-config]) 
+(define (get-database-info config) 
   (let*
-      ([CONFIG         (get-config)]
-       [DATABASE       (hash-ref CONFIG   CONFIG-DATABASE-KEY)]
+      ([DATABASE       (hash-ref config   CONFIG-DATABASE-KEY)]
        [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
        [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
        [GROUPS-PATH    (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
        [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)])
     (database URL API-KEY GROUPS-PATH TIMETABLE-PATH)))
 
-;; get-college-site-info: nothing -> college-site?
+;; get-college-site-info: jsexpr? -> college-site?
 ;; Read college site info from the config site.
-(define (get-college-site-info #:get-config-mock [get-config get-config])
+(define (get-college-site-info config)
   (let*
-      ([CONFIG       (get-config)]
-       [COLLEGE-SITE (hash-ref CONFIG       CONFIG-COLLEGE-SITE-KEY)]
+      ([COLLEGE-SITE (hash-ref config       CONFIG-COLLEGE-SITE-KEY)]
        [URL          (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-URL-KEY)]
        [BLOG-PATH    (hash-ref COLLEGE-SITE CONFIG-COLLEGE-SITE-BLOG-PATH-KEY)])
     (college-site URL BLOG-PATH)))
@@ -144,11 +140,12 @@
   (define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
   (define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))
   (define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
+  (define EXAMPLE-CONFIG (GET-CONFIG-MOCK))
   
-  (check-pred identity-toolkit? (get-identity-toolkit   #:get-config-mock GET-CONFIG-MOCK))
-  (check-pred user?             (get-user-credentials  #:get-config-mock GET-CONFIG-MOCK))
-  (check-pred database?         (get-database-info     #:get-config-mock GET-CONFIG-MOCK))
-  (check-pred college-site?     (get-college-site-info #:get-config-mock GET-CONFIG-MOCK))
+  (check-pred identity-toolkit? (get-identity-toolkit EXAMPLE-CONFIG))
+  (check-pred user?             (get-user-credentials EXAMPLE-CONFIG))
+  (check-pred database?         (get-database-info EXAMPLE-CONFIG))
+  (check-pred college-site?     (get-college-site-info EXAMPLE-CONFIG))
   
   (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
                                   #:file-reader-mock   STRING-PORT-MOCK))

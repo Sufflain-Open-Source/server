@@ -18,21 +18,71 @@
 #lang racket/base
 
 (require "config.rkt"
-         "requests.rkt")
+         "blog-scraper.rkt"
+         "shared/const.rkt"
+         "requests.rkt"
+         json)
 
-(provide add-groups)
+(provide add-all-groups-timetables
+         add-hash
+         get-hashes
+         get-groups
+         add-groups
+         add)
 
-;; add-groups: string? string? -> string?
-;; Add groups to the database. If they are already present, replace them.
-(define (add-groups groups auth-token 
-                    #:get-database-info-mock [get-database-info     get-database-info]
-                    #:with-json-payload-mock [with-json-payload/put with-json-payload/put])
+;; add-all-groups-timetables: jsexpr? string? string? string? (listof group-timetable?) -> jsexpr?
+;; Add timetables for all groups.
+(define (add-all-groups-timetables db-info link-title khash token timetables)
+  (for ([table timetables])
+    (let* ([TITLE          (group-timetable-title table)]
+           [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) TITLE))]
+           [TIMETABLE-JSON (jsexpr->string 
+                            (group-timetable-as-jsexpr link-title table))])
+      (add db-info 
+           TIMETABLE-JSON 
+           (string-append (database-timetable-path db-info) "/" GROUP-ID "/" khash)
+           token))))
+
+;; add-hash: jsexpr? string? string? string? -> jsexpr?
+;; Add a pair of hashes to the DB.
+(define (add-hash db-info khash vhash token)
+  (add db-info (jsexpr->string vhash) (string-append "/h/" khash) token))
+
+;; get-hashes: jsexpr? -> jsexpr?
+;; Get hashes from the DB.
+(define (get-hashes config)
   (let*
-      ([DB          (get-database-info)]
+      ([DB          (get-database-info config)]
+       [DB-URL      (database-url DB)]
+       [REQUEST-URL (string-append DB-URL "/h" ".json")])
+    (http-get REQUEST-URL)))
+
+;; get-groups: jsexpr? -> (listof string?)
+;; Get groups from the DB.
+(define (get-groups config)
+  (let*
+      ([DB          (get-database-info config)]
        [DB-URL      (database-url DB)]
        [GROUPS-PATH (database-groups-path DB)]
-       [REQUEST-URL (string-append DB-URL GROUPS-PATH ".json" "?auth=" auth-token)])
-    (with-json-payload/put REQUEST-URL groups)))
+       [REQUEST-URL (string-append DB-URL GROUPS-PATH ".json")])
+    (http-get REQUEST-URL)))
+
+;; add-groups: string? string? jsexpr? -> string?
+;; Add groups to the database. If they are already present, replace them.
+(define (add-groups groups auth-token config)
+  (let*
+      ([DB          (get-database-info config)]
+       [GROUPS-PATH (database-groups-path DB)])
+    (add DB groups GROUPS-PATH auth-token)))
+
+;; add: database? string? string? string? -> jsepxr?
+(define (add db-info payload path auth-token
+             #:get-database-info-mock [get-database-info     get-database-info]
+             #:with-json-payload-mock [with-json-payload/put with-json-payload/put])
+  (let*
+      ([DB-URL      (database-url db-info)]
+       [REQUEST-URL (string-append DB-URL path ".json" "?auth=" auth-token)])
+    (with-json-payload/put REQUEST-URL payload)))
 
 (module+ test
   (require "shared/mocks.rkt"
@@ -42,10 +92,13 @@
   
   (define GET-DATABASE-INFO-MOCK (mock 
                                   #:behavior (const 
-                                              (get-database-info #:get-config-mock GET-CONFIG-MOCK))))
+                                              (get-database-info (GET-CONFIG-MOCK)))))
   (define WITH-JSON-PAYLOAD-MOCK (mock
                                   #:behavior (const "[\"СА21-19\"]")))
+  #;
+  (check-equal? (get-groups #:http-get-mock get-groups-mock/list
+                            #:get-database-info-mock GET-DATABASE-INFO-MOCK) '("СА21-19"))
   
-  (check-equal? (add-groups "[\"СА21-19\"]"  ""
-                            #:get-database-info-mock GET-DATABASE-INFO-MOCK
-                            #:with-json-payload-mock WITH-JSON-PAYLOAD-MOCK) "[\"СА21-19\"]"))
+  (check-equal? (add (GET-DATABASE-INFO-MOCK) "[\"СА21-19\"]" "" ""
+                     #:get-database-info-mock GET-DATABASE-INFO-MOCK
+                     #:with-json-payload-mock WITH-JSON-PAYLOAD-MOCK) "[\"СА21-19\"]"))

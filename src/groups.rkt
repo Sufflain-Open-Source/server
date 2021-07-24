@@ -18,7 +18,6 @@
 #lang racket/base
 
 (require "scraper.rkt"
-         "config.rkt"
          "shared/const.rkt"
          json
          racket/function)
@@ -41,17 +40,12 @@
 ;; extract-groups-from-page: string? -> group-list
 ;; Find groups on a page with timetable.
 (define (extract-groups-from-page url-str
-                                  #:scrape-mock [scrape scrape]
-                                  #:get-college-site-info-mock [get-college-site-info 
-                                                                get-college-site-info])
-  (let*
-      ([COLLEGE-SITE (get-college-site-info)]
-       [SCRAPED-DATA (scrape url-str GROUP-TIMETABLE-TITLE-XPATH)])
-    (regex-select SCRAPED-DATA GROUPS-REGEX)))
+                                  #:scrape-mock [scrape scrape])
+  (define SCRAPED-DATA (scrape url-str GROUP-TIMETABLE-TITLE-XPATH))
+  (regex-select SCRAPED-DATA GROUPS-REGEX))
 
 (module+ test
-  (require "shared/mocks.rkt"
-           rackunit
+  (require rackunit
            mock)
   
   (check-equal? (group-list-to-json '("СА21-19" "ИБ31-18")) "[\"СА21-19\",\"ИБ31-18\"]")
@@ -59,10 +53,7 @@
   (test-case "extract-groups-from-page"
              (define SCRAPE-MOCK 
                (mock #:behavior (const '("время " "СА21-19 ауд.304б"))))
-             (define SITE-INFO-MOCK
-               (mock #:behavior (const (get-college-site-info #:get-config-mock GET-CONFIG-MOCK))))
              
              (check-equal? (extract-groups-from-page "https://url.here" 
-                                                     #:scrape-mock SCRAPE-MOCK
-                                                     #:get-college-site-info-mock SITE-INFO-MOCK)
+                                                     #:scrape-mock SCRAPE-MOCK)
                            '("СА21-19"))))

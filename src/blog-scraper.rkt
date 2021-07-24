@@ -23,6 +23,20 @@
          sxml
          racket/string)
 
+(provide blog-post
+         blog-post-title
+         blog-post-link
+         lesson
+         lesson-time
+         lesson-data
+         group-timetable
+         group-timetable-title
+         group-timetable-lessons
+         group-timetable-as-jsexpr
+         select-all-groups-timetables
+         select-tbodys
+         select-blog-posts)
+
 (define BLOG-LIST-ELEMENT-XPATH
   "//div[@class=\"kris-blogitem-all\"]/ol/li//div[@class=\"item-body-h\"]//a")
 (define TITLE-XPATH "/text()")
@@ -43,25 +57,16 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
-;; all-groups-timetables-as-jsexpr: string? (listof jsexpr)
-;; Convert timetables for all groups to jsexpr.
-(define (all-groups-timetables-as-jsexpr link-title timetables)
-  (map (lambda (timetable)
-         (group-timetable-as-jsexpr link-title 
-                                    (group-timetable-title timetable)
-                                    (group-timetable-lessons timetable))) timetables))
-
 ;; group-timetable-as-jsexpr: string? (listof lesson?)
 ;; Make a jsexpr with timetable contents.
-(define (group-timetable-as-jsexpr link-title title lessons)
-  (let ([LESSONS/JSEXPR (map lesson->jsexpr lessons)]
-        [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) title))])
-    (make-immutable-hasheq `((,(string->symbol GROUP-ID)
-                              .
-                              ,(make-immutable-hasheq `((,(string->symbol link-title)
-                                                         .
-                                                         ,(make-immutable-hasheq `((title   . ,title)
-                                                                                   (lessons . ,LESSONS/JSEXPR)))))))))))
+(define (group-timetable-as-jsexpr link-title gtimetable)
+  (let*
+      ([TITLE          (group-timetable-title gtimetable)]
+       [LESSONS        (group-timetable-lessons gtimetable)]
+       [LESSONS/JSEXPR (map lesson->jsexpr LESSONS)])
+    (make-immutable-hasheq `((title     . ,TITLE)
+                             (linkTitle . ,link-title)
+                             (lessons   . ,LESSONS/JSEXPR)))))
 
 ;; lesson->jsexpr: lesson? -> jsexpr
 ;; Make a jsexpr with a lesson info.
@@ -69,13 +74,12 @@
   (make-immutable-hasheq `((time . ,(lesson-time lesson))
                            (data . ,(lesson-data lesson)))))
 
-;; select-all-groups-timetables: xexpr -> (listof group-timetable?)
+;; select-all-groups-timetables: (listof xexpr) -> (listof group-timetable?)
 ;; Select all timetabes on page.
-(define (select-all-groups-timetables page)
-  (let* ([TBODYS             (select-tbodys page)]
-         [GROUPED-TIMETABLES (map (lambda (tbody)
-                                    (select-groups-timetables tbody)) TBODYS)])
-    (foldr append null GROUPED-TIMETABLES)))
+(define (select-all-groups-timetables tbodys)
+  (define GROUPED-TIMETABLES (map (lambda (tbody)
+                                    (select-groups-timetables tbody)) tbodys))
+  (foldr append null GROUPED-TIMETABLES))
 
 ;; select-groups-timetables: xexpr -> (listof group-timetable?)
 ;; Select timetables for each group.
@@ -163,7 +167,7 @@
 
 ;; select-blog-posts: xexpr -> (listof blog-post)
 ;; Select blog posts from the blog page SXML.
-(define (select-blog-posts blog-page 
+(define (select-blog-posts blog-page config
                            #:get-college-site-info-mock [get-college-site-info get-college-site-info])
   (let
       ([BLOG-POSTS    ((sxpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
@@ -174,8 +178,11 @@
       (let*
           ([TITLE         (get-by-xpath TITLE-XPATH element)]
            [RELATIVE-LINK (get-by-xpath LINK-XPATH element)]
+           [SITE-INFO     (get-college-site-info config)]
            [FULL-LINK     (string-append
-                           (college-site-url (get-college-site-info)) RELATIVE-LINK)])
+                           (college-site-url SITE-INFO)
+                           (college-site-blog-path SITE-INFO)
+                           RELATIVE-LINK)])
         (blog-post TITLE FULL-LINK)))))
 
 (module+ test
@@ -233,39 +240,38 @@
   (define EXAMPLE-LESSON (lesson "10.00 &ndash; 11.00" '("КС")))
   (define EXAMPLE-LESSON/JSEXPR (lesson->jsexpr EXAMPLE-LESSON))
   
-  (check-equal? 
-   (all-groups-timetables-as-jsexpr
-    "Расписание на ... дату"
-    (list (group-timetable "СА21-19 ауд.304"
-                           `(,EXAMPLE-LESSON))))
-   (list
-    (make-immutable-hasheq 
-     `((СА21-19
-        .
-        ,(make-immutable-hasheq `((|Расписание на ... дату|
-                                   . 
-                                   ,(make-immutable-hasheq 
-                                     `((title     . "СА21-19 ауд.304")
-                                       (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))))))))
+  #;(check-equal? 
+     (all-groups-timetables-as-jsexpr "hash"
+                                      "Расписание на ... дату"
+                                      (list (group-timetable "СА21-19 ауд.304"
+                                                             `(,EXAMPLE-LESSON))))
+     (list
+      (make-immutable-hasheq 
+       `((СА21-19
+          .
+          ,(make-immutable-hasheq `((hash
+                                     . 
+                                     ,(make-immutable-hasheq 
+                                       `((title     . "СА21-19 ауд.304")
+                                         (linkTitle . "Расписание на ... дату")
+                                         (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))))))))
   
   (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
-                                           "СА21-19 ауд.304" 
-                                           `(,EXAMPLE-LESSON))
+                                           (group-timetable "СА21-19 ауд.304" 
+                                                            `(,EXAMPLE-LESSON)))
                 (make-immutable-hasheq 
-                 `((СА21-19
-                    .
-                    ,(make-immutable-hasheq `((|Расписание на ... дату|
-                                               .
-                                               ,(make-immutable-hasheq 
-                                                 `((title     . "СА21-19 ауд.304")
-                                                   (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))))))))
+                 `((title     . "СА21-19 ауд.304")
+                   (linkTitle . "Расписание на ... дату")
+                   (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))
   
   (check-equal? (lesson->jsexpr (lesson "11.15 &ndash; 12.30" '("Предмет")))
                 #hasheq((time . "11.15 &ndash; 12.30")
                         (data . ("Предмет"))))
   
   (check-pred (lambda (result)
-                (andmap group-timetable? result)) (select-all-groups-timetables EXAMPLE-TIMETABLE-PAGE))
+                (andmap group-timetable? result)) 
+              (select-all-groups-timetables (cdr
+                                             (select-tbodys EXAMPLE-TIMETABLE-PAGE))))
   
   (test-case "select-groups-timetables"
              (check-equal? (select-groups-timetables null) null)
@@ -319,15 +325,15 @@
                           "https://example.url/elektronnye_servisy/blog/\
 uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g"))
              
-             (check-pred null? (select-blog-posts null 
+             (check-pred null? (select-blog-posts null (GET-CONFIG-MOCK)
                                                   #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK))
              (check-equal? (blog-post-title 
                             (car 
-                             (select-blog-posts EXAMPLE-BLOG
+                             (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-title EXAMPLE-BLOG-POST))
              (check-equal? (blog-post-link 
                             (car 
-                             (select-blog-posts EXAMPLE-BLOG
+                             (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-link EXAMPLE-BLOG-POST))))

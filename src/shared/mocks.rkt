@@ -18,7 +18,6 @@
 #lang racket/base
 
 (require "keys.rkt"
-         "const.rkt"
          racket/function
          mock
          json)
@@ -869,6 +868,12 @@
     (p (& nbsp))
     "\r\n"
     "\r\n"))
+
+(define (get-groups-mock . args)
+  (open-input-string "[\"СА21-19\"]"))
+
+(define (get-groups-mock/list . args)
+  '("СА21-19"))
 
 (define GET-CONFIG-MOCK 
   (mock #:behavior 
