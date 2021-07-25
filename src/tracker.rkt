@@ -123,15 +123,17 @@
 ;; delete-all-hash-pairs: jsexpr string? -> jsexpr?
 ;; Delete all hash pairs from the DB.
 (define (delete-all-hash-pairs db token)
-  (define URL (database-url db))
-  (http-delete (string-append URL "/h" ".json" "?auth=" token)))
+  (let* 
+      ([URL         (database-url db)]
+       [HASHES-PATH (database-hashes-path db)])
+    (http-delete (string-append URL HASHES-PATH ".json" "?auth=" token))))
 
 ;; delete-hash-pair: string? jsexpr? string? -> jsexpr?
 ;; Locate a pair of hashes by khash and delete it.
 (define (delete-hash-pair khash db token)
   (let*
-      ([URL         (database-url db)]
-       [HASHES-PATH  "/h"]
+      ([URL          (database-url db)]
+       [HASHES-PATH  (database-hashes-path db)]
        [HASH-DEL-URL (string-append URL HASHES-PATH "/" (symbol->string khash) ".json" "?auth=" token)])
     (http-delete HASH-DEL-URL)))
 

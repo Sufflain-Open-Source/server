@@ -46,7 +46,8 @@
 ;; add-hash: jsexpr? string? string? string? -> jsexpr?
 ;; Add a pair of hashes to the DB.
 (define (add-hash db-info khash vhash token)
-  (add db-info (jsexpr->string vhash) (string-append "/h/" khash) token))
+  (define HASHES-PATH (database-hashes-path db-info))
+  (add db-info (jsexpr->string vhash) (string-append HASHES-PATH "/" khash) token))
 
 ;; get-hashes: jsexpr? -> jsexpr?
 ;; Get hashes from the DB.
@@ -54,7 +55,8 @@
   (let*
       ([DB          (get-database-info config)]
        [DB-URL      (database-url DB)]
-       [REQUEST-URL (string-append DB-URL "/h" ".json")])
+       [HASHES-PATH (database-hashes-path DB)]
+       [REQUEST-URL (string-append DB-URL HASHES-PATH ".json")])
     (http-get REQUEST-URL)))
 
 ;; get-groups: jsexpr? -> (listof string?)

@@ -887,7 +887,8 @@
              ,(make-immutable-hasheq `((,CONFIG-DATABASE-URL-KEY            . "https://ourdb.app")
                                        (,CONFIG-DATABASE-API-KEY            . "uioy568y7")
                                        (,CONFIG-DATABASE-GROUPS-PATH-KEY    . "/g")
-                                       (,CONFIG-DATABASE-TIMETABLE-PATH-KEY . "/t"))))
+                                       (,CONFIG-DATABASE-TIMETABLE-PATH-KEY . "/t")
+                                       (,CONFIG-DATABASE-HASHES-PATH-KEY    . "/h"))))
             (,CONFIG-USER-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-USER-EMAIL-KEY    . "bruhmail@yeah.lol")

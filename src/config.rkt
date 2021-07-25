@@ -35,6 +35,7 @@
          database-api-key
          database-groups-path
          database-timetable-path
+         database-hashes-path
          college-site
          college-site?
          college-site-url
@@ -66,7 +67,7 @@
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
 ;; (database string? string? string? string?)
-(struct database [url api-key groups-path timetable-path])
+(struct database [url api-key groups-path timetable-path hashes-path])
 
 ;; college-site is a structure.
 ;; It contains a site URL and a blog path.
@@ -98,8 +99,9 @@
        [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
        [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
        [GROUPS-PATH    (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
-       [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)])
-    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH)))
+       [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)]
+       [HASHES-PATH    (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)])
+    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH)))
 
 ;; get-college-site-info: jsexpr? -> college-site?
 ;; Read college site info from the config site.

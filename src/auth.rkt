@@ -58,7 +58,7 @@
   (define POST-RESPONSE-MOCK
     (mock #:behavior (const EXAMPLE-AUTH-RESPONSE)))
   (define DB-INFO-MOCK
-    (mock #:behavior (const (database "" "k3y" "" ""))))
+    (mock #:behavior (const (database "" "k3y" "" "" ""))))
   (define IDENTITY-TOOLKIT-MOCK
     (mock #:behavior (const (identity-toolkit "url"))))
   

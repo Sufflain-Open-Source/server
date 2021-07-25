@@ -10,7 +10,8 @@
         "url": "",
         "apiKey": "",
         "groupsPath": "",
-        "timetablePath": ""
+        "timetablePath": "",
+        "hashesPath": ""
     },
     "collegeSite": {
         "url": "",
