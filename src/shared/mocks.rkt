@@ -879,7 +879,10 @@
   (mock #:behavior 
         (const
          (make-immutable-hasheq 
-          `((,CONFIG-IDENTITY-TOOLKIT-KEY
+          `((,CONFIG-APP-PROPS-KEY
+             .
+             ,(make-immutable-hasheq `((,CONFIG-APP-PROPS-SLEEP-TIME-KEY . 1800))))
+            (,CONFIG-IDENTITY-TOOLKIT-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-IDENTITY-TOOLKIT-URL-KEY . "https://identity.url"))))
             (,CONFIG-DATABASE-KEY

@@ -31,6 +31,10 @@
          user-password
          database
          database?
+         app-props
+         app-props-sleep-time
+         app-props?
+         get-app-props
          database-url
          database-api-key
          database-groups-path
@@ -73,6 +77,19 @@
 ;; It contains a site URL and a blog path.
 ;; (college-site string? string? string? string?)
 (struct college-site [url blog-path])
+
+;; sleep-time is a structure.
+;; It contains server app properties such as sleep time.
+;; (app-props number?)
+(struct app-props [sleep-time])
+
+;; get-app-props: jsexpr? -> app-props?
+;; Read app properties from the config file.
+(define (get-app-props config)
+  (let*
+      ([APP-PROPS            (hash-ref config    CONFIG-APP-PROPS-KEY)]
+       [APP-PROPS-SLEEP-TIME (hash-ref APP-PROPS CONFIG-APP-PROPS-SLEEP-TIME-KEY)])
+    (app-props APP-PROPS-SLEEP-TIME)))
 
 ;; get-identity-toolit: jsexpr? -> identity-toolkit?
 ;; Read identity toolkit info from the config file.
@@ -148,6 +165,7 @@
   (check-pred user?             (get-user-credentials EXAMPLE-CONFIG))
   (check-pred database?         (get-database-info EXAMPLE-CONFIG))
   (check-pred college-site?     (get-college-site-info EXAMPLE-CONFIG))
+  (check-pred app-props?        (get-app-props EXAMPLE-CONFIG))
   
   (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
                                   #:file-reader-mock   STRING-PORT-MOCK))
