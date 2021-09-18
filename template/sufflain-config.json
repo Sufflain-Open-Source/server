@@ -16,5 +16,8 @@
     "collegeSite": {
         "url": "",
         "blogPath": ""
+    },
+    "app": {
+        "sleepTime": 0
     }
 }

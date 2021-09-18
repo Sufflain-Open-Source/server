@@ -23,16 +23,16 @@
          "auth.rkt"
          racket/cmdline)
 
-;; get-groups: string? -> void?
+;; get-groups: string? jsexpr? -> void?
 ;; A frontend for add-groups
-(define (get-groups url-str)
+(define (get-groups url-str config)
   (let*
-      ([USER   (get-user-credentials)]
-       [DB     (get-database-info)]
+      ([USER   (get-user-credentials config)]
+       [DB     (get-database-info config)]
        [GROUPS (extract-groups-from-page url-str)]
-       [TOKEN  (get-token (user-email USER) (user-password USER))])
+       [TOKEN  (get-token (user-email USER) (user-password USER) config)])
     (displayln 
-     (add-groups (group-list-to-json GROUPS) TOKEN))))
+     (add-groups (group-list-to-json GROUPS) TOKEN config))))
 
 (command-line #:program "sfl"
               #:once-any
