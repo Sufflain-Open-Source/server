@@ -21,11 +21,30 @@
          "config.rkt"
          "database.rkt"
          "auth.rkt"
+         "tracker.rkt"
+         "scraper.rkt"
          racket/cmdline)
 
-;; get-groups: string? jsexpr? -> void?
+(define (listen-for-changes config)
+  (let*
+      ([USER         (get-user-credentials config)]
+       [DB           (get-database-info config)]
+       [TOKEN        (get-token (user-email USER) (user-password USER) config)]
+       [APP-PROPS    (get-app-props config)]
+       [GROUPS       (get-groups config)]
+       [SLEEP-TIME   (app-props-sleep-time APP-PROPS)]
+       [COLLEGE-SITE (get-college-site-info config)]
+       [SITE-URL     (college-site-url COLLEGE-SITE)]
+       [BLOG-PATH    (college-site-blog-path COLLEGE-SITE)]
+       [FULL-URL     (string-append SITE-URL BLOG-PATH)]
+       [BLOG-PAGE    (get-page FULL-URL)])
+    (track BLOG-PAGE GROUPS config TOKEN)
+    (sleep SLEEP-TIME)
+    (listen-for-changes config)))
+
+;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
-(define (get-groups url-str config)
+(define (get-groups-and-add-to-db url-str config)
   (let*
       ([USER   (get-user-credentials config)]
        [DB     (get-database-info config)]

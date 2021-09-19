@@ -25,6 +25,8 @@
          sxml
          openssl/md5)
 
+(provide track)
+
 ;; hashes is one of:
 ;;   - null
 ;;   - (cons string? string?)
