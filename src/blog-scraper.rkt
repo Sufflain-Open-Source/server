@@ -181,8 +181,8 @@
            [SITE-INFO     (get-college-site-info config)]
            [FULL-LINK     (string-append
                            (college-site-url SITE-INFO)
-                           (college-site-blog-path SITE-INFO)
-                           RELATIVE-LINK)])
+                           RELATIVE-LINK
+                           "/")])
         (blog-post TITLE FULL-LINK)))))
 
 (module+ test

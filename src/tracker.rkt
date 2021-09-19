@@ -37,7 +37,7 @@
 ;; (post blog-post? (listof xexpr) pair?)
 (struct post [blogpt data hashes])
 
-;; track: xexpr string? group-list jsexpr? string? -> void?
+;; track: xexpr group-list jsexpr? string? -> void?
 ;; Find changes in the blog page and timetables, add to the DB.
 (define (track blog-page groups config token
                #:track-update-mock [track-and-update track-and-update]
