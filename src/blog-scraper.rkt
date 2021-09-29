@@ -26,6 +26,7 @@
 (provide blog-post
          blog-post-title
          blog-post-link
+         blog-post-order
          lesson
          lesson-time
          lesson-data
@@ -43,9 +44,9 @@
 (define LINK-XPATH "/@href/text()")
 
 ;; blog-post is a structure.
-;; It contains a title and a link of the blog post.
-;; (blog-post string? string?)
-(struct blog-post [title link])
+;; It contains a title, link and order of the blog post.
+;; (blog-post string? string? number?)
+(struct blog-post [title link order])
 
 ;; lesson is a structure.
 ;; It contains info about lesson.
@@ -57,15 +58,16 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
-;; group-timetable-as-jsexpr: string? (listof lesson?)
+;; group-timetable-as-jsexpr: string? number? (listof lesson?)
 ;; Make a jsexpr with timetable contents.
-(define (group-timetable-as-jsexpr link-title gtimetable)
+(define (group-timetable-as-jsexpr link-title post-order gtimetable)
   (let*
       ([TITLE          (group-timetable-title gtimetable)]
        [LESSONS        (group-timetable-lessons gtimetable)]
        [LESSONS/JSEXPR (map lesson->jsexpr LESSONS)])
     (make-immutable-hasheq `((title     . ,TITLE)
                              (linkTitle . ,link-title)
+                             (postOrder . ,post-order)
                              (lessons   . ,LESSONS/JSEXPR)))))
 
 ;; lesson->jsexpr: lesson? -> jsexpr
@@ -169,12 +171,14 @@
 ;; Select blog posts from the blog page SXML.
 (define (select-blog-posts blog-page config
                            #:get-college-site-info-mock [get-college-site-info get-college-site-info])
-  (let
-      ([BLOG-POSTS    ((sxpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
+  (let*
+      ([BLOG-POSTS        ((sxpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
+       [BLOG-POSTS-LENGTH (length BLOG-POSTS)]
        [get-by-xpath  (lambda (xpath element)
                         (car 
                          ((sxpath xpath) element)))])
-    (for/list ([element BLOG-POSTS])
+    (for/list ([element BLOG-POSTS]
+               [index   (build-list BLOG-POSTS-LENGTH values)])
       (let*
           ([TITLE         (get-by-xpath TITLE-XPATH element)]
            [RELATIVE-LINK (get-by-xpath LINK-XPATH element)]
@@ -183,7 +187,7 @@
                            (college-site-url SITE-INFO)
                            RELATIVE-LINK
                            "/")])
-        (blog-post TITLE FULL-LINK)))))
+        (blog-post TITLE FULL-LINK index)))))
 
 (module+ test
   (require "shared/mocks.rkt"
@@ -257,11 +261,13 @@
                                          (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))))))))
   
   (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
+                                           0
                                            (group-timetable "СА21-19 ауд.304" 
                                                             `(,EXAMPLE-LESSON)))
                 (make-immutable-hasheq 
                  `((title     . "СА21-19 ауд.304")
                    (linkTitle . "Расписание на ... дату")
+                   (postOrder . 0)
                    (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))
   
   (check-equal? (lesson->jsexpr (lesson "11.15 &ndash; 12.30" '("Предмет")))
@@ -323,7 +329,8 @@
              (define EXAMPLE-BLOG-POST
                (blog-post "Расписание занятий на 2 июля 2021 г."
                           "https://example.url/elektronnye_servisy/blog/\
-uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g"))
+uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g/" 
+                          0))
              
              (check-pred null? (select-blog-posts null (GET-CONFIG-MOCK)
                                                   #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK))
@@ -336,4 +343,10 @@ uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g"))
                             (car 
                              (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
-                           (blog-post-link EXAMPLE-BLOG-POST))))
+                           (blog-post-link EXAMPLE-BLOG-POST))
+             (check-equal? (blog-post-order 
+                            (car 
+                             (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
+                                                #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
+                           0)))
+             

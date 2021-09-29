@@ -62,10 +62,11 @@
   (let* ([DB-HASHES (get-hashes/safe config)]
          [get-db-vhash        (lambda (post-khash) 
                                 (hash-ref DB-HASHES post-khash))]
-         [add-or-update-data  (lambda (db-info blog-post-title post-khash post-vhash timetables) 
+         [add-or-update-data  (lambda (db-info blog-post-title post-order post-khash post-vhash timetables) 
                                 (define KHASH-STRING (symbol->string post-khash))
                                 (add-all-groups-timetables db-info
                                                            blog-post-title
+                                                           post-order
                                                            KHASH-STRING
                                                            token
                                                            timetables)
@@ -77,13 +78,14 @@
                  [POST-VHASH  (cdr (post-hashes post))]
                  [BPOST       (post-blogpt post)]
                  [BPOST-TITLE (blog-post-title BPOST)]
+                 [BPOST-ORDER (blog-post-order BPOST)]
                  [TIMETABLES  (select-all-groups-timetables (post-data post))])
             (unless (if (hash-has-key? DB-HASHES POST-KHASH)
                         (if (equal? (get-db-vhash POST-KHASH) POST-VHASH)
                             #t
                             #f)
                         #f)
-              (add-or-update-data DB-INFO BPOST-TITLE POST-KHASH POST-VHASH TIMETABLES))))))))
+              (add-or-update-data DB-INFO BPOST-TITLE BPOST-ORDER POST-KHASH POST-VHASH TIMETABLES))))))))
 
 ;; remove-redundant: (listof hashes) group-list jsexpr? string? -> void?
 ;; Remove redundant timetables for each group.
@@ -169,13 +171,14 @@
 (module+ test
   (require rackunit)
   
-  (define EXAMPLE-BLOG-POST (blog-post "title" "link"))
+  (define EXAMPLE-BLOG-POST (blog-post "title" "link" 0))
   
   (check-equal? (tbodys-hash '((*TOP* (tbody)) (*TOP* (tbody))))
                 (md5 (open-input-string "<tbody /><tbody />")))
   
   (check-equal? (blog-post-hash (blog-post "Расписание занятий на ..."
-                                           "/some/path")) 
+                                           "/some/path"
+                                           0)) 
                 (md5 (open-input-string "Расписание занятий на ...@/some/path")))
   
   (check-equal? (blog-post->stirng EXAMPLE-BLOG-POST)

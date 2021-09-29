@@ -30,14 +30,14 @@
          add-groups
          add)
 
-;; add-all-groups-timetables: jsexpr? string? string? string? (listof group-timetable?) -> jsexpr?
+;; add-all-groups-timetables: jsexpr? string? number? string? string? (listof group-timetable?) -> jsexpr?
 ;; Add timetables for all groups.
-(define (add-all-groups-timetables db-info link-title khash token timetables)
+(define (add-all-groups-timetables db-info link-title post-order khash token timetables)
   (for ([table timetables])
     (let* ([TITLE          (group-timetable-title table)]
            [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) TITLE))]
            [TIMETABLE-JSON (jsexpr->string 
-                            (group-timetable-as-jsexpr link-title table))])
+                            (group-timetable-as-jsexpr link-title post-order table))])
       (add db-info 
            TIMETABLE-JSON 
            (string-append (database-timetable-path db-info) "/" GROUP-ID "/" khash)
