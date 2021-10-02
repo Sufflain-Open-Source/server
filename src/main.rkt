@@ -25,6 +25,8 @@
          "scraper.rkt"
          racket/cmdline)
 
+(define CONFIG (get-config))
+
 (define (listen-for-changes config)
   (let*
       ([USER         (get-user-credentials config)]
@@ -58,5 +60,5 @@
               (("-g" "--get-groups") PAGE-URL 
                                      "Get groups and place them into the database. \
 \nExisting groups' data will be overwritten if it exists!"
-                                     (get-groups PAGE-URL))
+                                     (get-groups-and-add-to-db PAGE-URL CONFIG))
               #:args () (void))
