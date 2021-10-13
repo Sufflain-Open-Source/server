@@ -23,26 +23,44 @@
          "auth.rkt"
          "tracker.rkt"
          "scraper.rkt"
-         racket/cmdline)
+         racket/cmdline
+         dyoo-while-loop)
 
 (define CONFIG (get-config))
-(define USER   (get-user-credentials config))
-(define DB     (get-database-info config))
-(define TOKEN  (get-token (user-email USER) (user-password USER) config))
-(define GROUPS (get-groups config))
+(define USER   (get-user-credentials CONFIG))
+(define DB     (get-database-info CONFIG))
+(define TOKEN  (get-token (user-email USER) (user-password USER) CONFIG))
+(define GROUPS (get-groups CONFIG TOKEN))
+
+(define TRACKING-ITERATION-MSG-FIRST-PART "<<<---Tracking iteration [")
+(define TRACKING-ITERATION-MSG-LAST-PART "]--->>>")
+
+(define TRACKING-ITERATION-START-MSG 
+  (string-append TRACKING-ITERATION-MSG-FIRST-PART "START" TRACKING-ITERATION-MSG-LAST-PART))
+(define TRACKING-ITERATION-END-MSG
+  (string-append TRACKING-ITERATION-MSG-FIRST-PART "END" TRACKING-ITERATION-MSG-LAST-PART))
+(define DELIMETER
+  (make-string (string-length TRACKING-ITERATION-END-MSG) #\@))
+
+(define (main)
+  (let*
+      ([APP-PROPS    (get-app-props CONFIG)]       
+       [SLEEP-TIME   (app-props-sleep-time APP-PROPS)])
+    (while #t
+           (displayln TRACKING-ITERATION-START-MSG)
+           (listen-for-changes CONFIG)
+           (displayln TRACKING-ITERATION-END-MSG)
+           (displayln DELIMETER)
+           (sleep SLEEP-TIME))))
 
 (define (listen-for-changes config)
   (let*
-      ([APP-PROPS    (get-app-props config)]       
-       [SLEEP-TIME   (app-props-sleep-time APP-PROPS)]
-       [COLLEGE-SITE (get-college-site-info config)]
+      ([COLLEGE-SITE (get-college-site-info config)]
        [SITE-URL     (college-site-url COLLEGE-SITE)]
        [BLOG-PATH    (college-site-blog-path COLLEGE-SITE)]
        [FULL-URL     (string-append SITE-URL BLOG-PATH)]
        [BLOG-PAGE    (get-page FULL-URL)])
-    (track BLOG-PAGE GROUPS config TOKEN)
-    (sleep SLEEP-TIME)
-    (listen-for-changes config)))
+    (track BLOG-PAGE GROUPS config TOKEN)))
 
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
@@ -58,4 +76,6 @@
                                      "Get groups and place them into the database. \
 \nExisting groups' data will be overwritten if it exists!"
                                      (get-groups-and-add-to-db PAGE-URL CONFIG))
+              (("-t" "--track") "Track timetables changes and upload them to the database."
+                                (main))
               #:args () (void))

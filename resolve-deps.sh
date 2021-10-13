@@ -1,2 +1,2 @@
 #!/bin/sh
-raco pkg install --auto $(cat deps.txt)
+raco pkg install --skip-installed --auto $(cat deps.txt)
