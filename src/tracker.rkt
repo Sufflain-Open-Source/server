@@ -59,7 +59,7 @@
 ;; track-and-update: (listof post?) jsexpr? string? -> void?
 ;; Track timetable changes and add to the DB.
 (define (track-and-update posts config token)
-  (let* ([DB-HASHES (get-hashes/safe config)]
+  (let* ([DB-HASHES (get-hashes/safe config token)]
          [get-db-vhash        (lambda (post-khash) 
                                 (hash-ref DB-HASHES post-khash))]
          [add-or-update-data  (lambda (db-info blog-post-title post-order post-khash post-vhash timetables) 
@@ -90,7 +90,7 @@
 ;; remove-redundant: (listof hashes) group-list jsexpr? string? -> void?
 ;; Remove redundant timetables for each group.
 (define (remove-redundant hashes groups config token)
-  (let ([DB-HASHES (get-hashes/safe config)]
+  (let ([DB-HASHES (get-hashes/safe config token)]
         [DB-INFO   (get-database-info config)])
     (unless (hash-empty? DB-HASHES)
       (if (hash-empty? hashes)
@@ -107,8 +107,8 @@
 
 ;; get-hashes/safe: jsexpr? -> hash?
 ;; Get hashes from the DB.
-(define (get-hashes/safe config)
-  (define h (get-hashes config))
+(define (get-hashes/safe config token)
+  (define h (get-hashes config token))
   (if (equal? h 'null)
       #hasheq()
       h))

@@ -26,14 +26,14 @@
          racket/cmdline)
 
 (define CONFIG (get-config))
+(define USER   (get-user-credentials config))
+(define DB     (get-database-info config))
+(define TOKEN  (get-token (user-email USER) (user-password USER) config))
+(define GROUPS (get-groups config))
 
 (define (listen-for-changes config)
   (let*
-      ([USER         (get-user-credentials config)]
-       [DB           (get-database-info config)]
-       [TOKEN        (get-token (user-email USER) (user-password USER) config)]
-       [APP-PROPS    (get-app-props config)]
-       [GROUPS       (get-groups config)]
+      ([APP-PROPS    (get-app-props config)]       
        [SLEEP-TIME   (app-props-sleep-time APP-PROPS)]
        [COLLEGE-SITE (get-college-site-info config)]
        [SITE-URL     (college-site-url COLLEGE-SITE)]
@@ -47,11 +47,8 @@
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
 (define (get-groups-and-add-to-db url-str config)
-  (let*
-      ([USER   (get-user-credentials config)]
-       [DB     (get-database-info config)]
-       [GROUPS (extract-groups-from-page url-str)]
-       [TOKEN  (get-token (user-email USER) (user-password USER) config)])
+  (let
+      ([GROUPS (extract-groups-from-page url-str)])
     (displayln 
      (add-groups (group-list-to-json GROUPS) TOKEN config))))
 

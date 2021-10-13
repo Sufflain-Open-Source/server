@@ -51,22 +51,22 @@
 
 ;; get-hashes: jsexpr? -> jsexpr?
 ;; Get hashes from the DB.
-(define (get-hashes config)
+(define (get-hashes config token)
   (let*
       ([DB          (get-database-info config)]
        [DB-URL      (database-url DB)]
        [HASHES-PATH (database-hashes-path DB)]
-       [REQUEST-URL (string-append DB-URL HASHES-PATH ".json")])
+       [REQUEST-URL (string-append DB-URL HASHES-PATH ".json" "?auth=" token)])
     (http-get REQUEST-URL)))
 
 ;; get-groups: jsexpr? -> (listof string?)
 ;; Get groups from the DB.
-(define (get-groups config)
+(define (get-groups config token)
   (let*
       ([DB          (get-database-info config)]
        [DB-URL      (database-url DB)]
        [GROUPS-PATH (database-groups-path DB)]
-       [REQUEST-URL (string-append DB-URL GROUPS-PATH ".json")])
+       [REQUEST-URL (string-append DB-URL GROUPS-PATH ".json" "?auth=" token)])
     (http-get REQUEST-URL)))
 
 ;; add-groups: string? string? jsexpr? -> string?
