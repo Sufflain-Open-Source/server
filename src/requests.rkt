@@ -27,6 +27,12 @@
          with-json-payload/post
          with-json-payload/put)
 
+(define RECONNECT-SLEEP-SECONDS 10)
+(define TRYING-TO-RECONNECT-MESSAGE
+  (string-append "Trying to reconnect in "
+                 (number->string RECONNECT-SLEEP-SECONDS)
+                 " seconds..."))
+
 ;; http-delete: string? -> jsexpr?
 (define (http-delete url-str [request-pure-port delete-pure-port])
   (http-request url-str delete-pure-port))
@@ -47,39 +53,51 @@
 ;; Perform an HTTP request with/without JSON payload.
 (define (http-request url-str #:json-payload [json-str null] request-pure-port)
   (let* ([URL                  (string->url url-str)]
-         [RESPONSE-PORT/STRING (port->string 
+         [RESPONSE-PORT/STRING (port->string
                                 (if (equal? json-str null)
-                                    (request-pure-port URL)
-                                    (request-pure-port URL
-                                                       (string->bytes/utf-8 json-str) 
-                                                       '("Content-Type: application/json"))))])
+                                    (make-network-request-with-handler
+                                     (lambda () (request-pure-port URL)))
+                                    (make-network-request-with-handler
+                                     (lambda () (request-pure-port URL
+                                                                   (string->bytes/utf-8 json-str)
+                                                                   '("Content-Type: application/json"))))))])
     (string->jsexpr RESPONSE-PORT/STRING)))
+
+;; make-network-request-with-handler: procedure -> any
+;; Make a network request and try to reconnect in 10 seconds if there is an error.
+(define (make-network-request-with-handler proc)
+  (with-handlers ([exn? (lambda (ex)
+                          (displayln (exn-message ex))
+                          (displayln TRYING-TO-RECONNECT-MESSAGE)
+                          (sleep RECONNECT-SLEEP-SECONDS)
+                          (make-network-request-with-handler proc))])
+    (proc)))
 
 (module+ test
   (require "shared/mocks.rkt"
            rackunit)
-  
+
   (define (make-post-mock . args)
     (open-input-string EXAMPLE-JSEXPR/STRING))
-  
+
   (check-equal? (http-get "" get-groups-mock)
                 '("СА21-19"))
-  
+
   (test-case "with-json-payload/post"
-             (check-pred jsexpr? 
-                         (with-json-payload/post "https://example.mock" 
-                           "true" 
+             (check-pred jsexpr?
+                         (with-json-payload/post "https://example.mock"
+                           "true"
                            make-post-mock))
              (check-equal? EXAMPLE-JSEXPR
-                           (with-json-payload/post "https://example.mock" 
+                           (with-json-payload/post "https://example.mock"
                              "true"
                              make-post-mock)))
   (test-case "with-json-payload/put"
-             (check-pred jsexpr? 
-                         (with-json-payload/put "https://example.mock" 
-                           "true" 
+             (check-pred jsexpr?
+                         (with-json-payload/put "https://example.mock"
+                           "true"
                            make-post-mock))
              (check-equal? EXAMPLE-JSEXPR
-                           (with-json-payload/put "https://example.mock" 
+                           (with-json-payload/put "https://example.mock"
                              "true"
                              make-post-mock))))
