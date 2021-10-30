@@ -1,4 +1,4 @@
-FROM archlinux
+FROM ubuntu
 
 WORKDIR "/root/.config"
 
@@ -8,9 +8,12 @@ COPY . /root/app
 
 WORKDIR "/root/app"
 
-RUN pacman -Sy && \ 
- pacman -S --noconfirm racket-minimal make && \ 
- bash ./resolve-deps.sh && \ 
- make
+RUN apt update && \
+ apt install -y software-properties-common && \
+ add-apt-repository ppa:plt/racket && \
+ apt update && \
+ apt install -y racket make && \
+ bash ./resolve-deps.sh ; \
+ make all
 
 ENTRYPOINT ["/root/app/build/sfl", "--track"]

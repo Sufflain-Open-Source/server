@@ -2,10 +2,10 @@ SOURCE_DIR=src
 BUILD=build
 MAIN=$(SOURCE_DIR)/main.rkt
 
+all: test sfl
+
 docker:
 	docker build -t sufflain-server .
-
-all: test sfl
 
 sfl: $(BUILD) $(MAIN)
 	raco exe -o $(BUILD)/$@ $(MAIN)
