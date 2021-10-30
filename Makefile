@@ -2,6 +2,9 @@ SOURCE_DIR=src
 BUILD=build
 MAIN=$(SOURCE_DIR)/main.rkt
 
+docker:
+	docker build -t sufflain-server .
+
 all: test sfl
 
 sfl: $(BUILD) $(MAIN)
