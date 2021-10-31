@@ -7,10 +7,24 @@ Licensed under the **GNU AGPLv3**. For more, read the [LICENSE](./LICENSE) file.
 1. Create a user with an Email provider.
 2. Make sure that Firebase Realtime Database write permissions are allowed *only* for a user with a specific UID.
 ### Config file
+### Docker
+1. Create a directory called *private* in the project root directory.
+2. Copy the program's config file from the [template](./template) directory to *private*.
+
+### Standard
 1. Copy the program's config file from the [template](./template) directory to *$HOME/.config*.
-2. Fill it with necessary data for writing to the database.
+
+*In both cases, you need to fill the config file with your own data.*
 
 ## Build
+### Docker
+```bash
+make docker
+```
+
+Issuing this command results in building a docker image tagged as "*sufflain-server*."
+
+### Standard
 1. Run a script for resolving dependencies. Use either a PowerShell or shell script, depending on your system:
 ```powershell
 .\resolve-deps.ps1
