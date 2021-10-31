@@ -1,12 +1,13 @@
-FROM ubuntu
+# --- STAGE 1 ---
+FROM ubuntu AS build
+ENV CONFIG=/root/.config
+ENV APP=/root/app
 
-WORKDIR "/root/.config"
-
+WORKDIR ${CONFIG}
 COPY ["private/sufflain-config.json", "sufflain-config.json"]
 
-COPY . /root/app
-
-WORKDIR "/root/app"
+COPY . ${APP}
+WORKDIR ${APP}
 
 RUN apt update && \
  apt install -y software-properties-common && \
@@ -14,6 +15,19 @@ RUN apt update && \
  apt update && \
  apt install -y racket make && \
  bash ./resolve-deps.sh ; \
- make all
+ make distribute
 
-ENTRYPOINT ["/root/app/build/sfl", "--track"]
+# --- STAGE 2 ---
+FROM ubuntu
+ENV CONFIG=/root/.config
+ENV APP=/root/app
+ENV BUILD=${APP}/build
+
+RUN apt update && apt install -y openssl
+
+WORKDIR ${CONFIG}
+COPY ["private/sufflain-config.json", "sufflain-config.json"]
+
+COPY --from=build "${APP}/dist" "${APP}/"
+
+ENTRYPOINT ["/root/app/bin/sfl", "--track"]
