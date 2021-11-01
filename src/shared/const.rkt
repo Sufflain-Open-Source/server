@@ -23,6 +23,6 @@
 
 (define GROUPS-REGEX "\\S{1,2}\\d{2}-\\d{2}")
 
-(define TIME-REGEX "\\d{2}.\\d{2}\\s\\&ndash;\\s\\d{2}.\\d{2}")
+(define TIME-REGEX "\\d{2}\\.\\d{2}.*\\d{2}\\.\\d{2}")
 
 (define TIMETABLE-TBODY-XPATH "//table[@border=\"1\"]/tbody")

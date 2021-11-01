@@ -151,7 +151,7 @@
 ;; Select the time when classes start and end.
 ;; Time is formatted as hh \u2013 mm.
 (define (select-time tbody)
-  (select-from-tbody tbody "//tr/td/p" TIME-REGEX))
+  (select-from-tbody tbody "//tr/td[1]/p" TIME-REGEX))
 
 ;; select-from-tbody: xexpr string? string? -> (listof string?)
 ;; Select data from the provided <tbody>.
