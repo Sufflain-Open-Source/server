@@ -1,6 +1,34 @@
 # Sufflain's server-side application
+*This script tracks timetables changes on the site of my college and stores them in a database. 
+The data can be accessed through the web app later.*
 
 Licensed under the **GNU AGPLv3**. For more, read the [LICENSE](./LICENSE) file.
+
+Images are licensed under the **Creative Commons Attribution-NonCommercial-NoDerivatives 4**. For more, read the [LICENSE](./img/LICENSE.md) file.
+
+## Docker container demo
+*The iteration is quick because there are no timetable changes.*
+[![asciicast](https://asciinema.org/a/446184.svg)](https://asciinema.org/a/446184?speed=1.5)
+
+### Explanation
+Both computed and saved in the previous iteration hashes are equal, so the data doesn't change.
+The app will wait for the next iteration (the default wait time is 30 minutes).
+
+## How does it work?
+1. Every *[specified time]* minutes the app gets the blog page from the college site.
+2. For every blog post title, a hash is computed.
+3. For every blog post timetable, a hash is computed.
+4. After that, depending on the situation, the app will either add, update, or remove from the database a timetable with its hashes.
+
+### Hashes - the key component
+We use them to find out if there are any changes or not.
+
+**The timetable for each date can be accessed by its hash, as shown in the figure below:**
+![Database hashes](img/db-edited.png)
+
+### Timetable info structure
+**The structure is similar for each group.**
+![Database timetables](img/db-timetable-edited.png)
 
 ## Project configuration
 ### Firebase
