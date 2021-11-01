@@ -1,6 +1,6 @@
 # Sufflain's server-side application
-*This script tracks timetables changes on the site of my college and stores them in a database. 
-The data can be accessed through the web app later.*
+*This script tracks timetables changes on the site of my college and stores them in a database.
+The data is accessed through the web app.*
 
 Licensed under the **GNU AGPLv3**. For more, read the [LICENSE](./LICENSE) file.
 
@@ -11,7 +11,8 @@ Images are licensed under the **Creative Commons Attribution-NonCommercial-NoDer
 [![asciicast](https://asciinema.org/a/446184.svg)](https://asciinema.org/a/446184?speed=1.5)
 
 ### Explanation
-Both computed and saved in the previous iteration hashes are equal, so the data doesn't change.
+The computed hashes are equal to those stored in the database.
+That means the data didn't change.
 The app will wait for the next iteration (the default wait time is 30 minutes).
 
 ## How does it work?
@@ -24,17 +25,26 @@ The app will wait for the next iteration (the default wait time is 30 minutes).
 We use them to find out if there are any changes or not.
 
 **The timetable for each date can be accessed by its hash, as shown in the figure below:**
+
 ![Database hashes](img/db-edited.png)
 
 ### Timetable info structure
 **The structure is similar for each group.**
+
 ![Database timetables](img/db-timetable-edited.png)
 
 ## Project configuration
 ### Firebase
 1. Create a user with an Email provider.
 2. Make sure that Firebase Realtime Database write permissions are allowed *only* for a user with a specific UID.
-### Config file
+
+### Realtime Database Rules
+**The following rules are recommended:**
+
+![firebase rules](img/firebase-rules.png)
+
+*Replace "\<your-user-uid\>" with the actual UID. You will use this user to access private locations in the database.*
+
 ### Docker
 1. Create a directory called *private* in the project root directory.
 2. Copy the program's config file from the [template](./template) directory to *private*.
@@ -64,6 +74,27 @@ Issuing this command results in building a docker image tagged as "*sufflain-ser
 2. Use GNU Make to test and build the app itself:
 ```sh
 make
+```
+
+## Usage
+1. Get groups from a specific timetable:
+```bash
+sfl --get-groups [specific timetable url]
+```
+or
+```bash
+sfl -g [specific timetable url]
+```
+
+The command above will extract groups from the page and add them to the database.
+
+2. Run the app:
+```bash
+sfl --track
+```
+or
+```bash
+sfl -t
 ```
 
 ## Commit Message Guidelines
