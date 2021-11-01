@@ -3,5 +3,6 @@ tests/
 *.bak
 tests/
 compiled
-build
+build/
+dist/
 private/

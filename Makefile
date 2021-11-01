@@ -1,5 +1,6 @@
 SOURCE_DIR=src
 BUILD=build
+DIST=dist
 MAIN=$(SOURCE_DIR)/main.rkt
 EXE=sfl
 
@@ -9,7 +10,7 @@ docker:
 	docker build -t sufflain-server .
 
 distribute: test sfl
-	raco distribute dist $(BUILD)/$(EXE)
+	raco distribute $(DIST) $(BUILD)/$(EXE)
 
 sfl: $(BUILD) $(MAIN)
 	raco exe -o $(BUILD)/$(EXE) $(MAIN)
@@ -23,4 +24,8 @@ test:
 clean:
 	if [ -d "$(BUILD)" ]; then\
 	 rm -r $(BUILD) ; \
+	fi
+
+	if [ -d "$(DIST)" ]; then\
+	 rm -r $(DIST) ; \
 	fi
