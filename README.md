@@ -41,3 +41,9 @@ make
 ## Commit Message Guidelines
 We use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) to format our commit
 messages.
+
+## Libraries
+- [sxml](https://pkgs.racket-lang.org/package/sxml) - Copyright info is not provided.
+- [html-parsing](https://pkgs.racket-lang.org/package/html-parsing) - Copyright 2003–2012, 2015, 2016, 2018 Neil Van Dyke
+- [mock](https://pkgs.racket-lang.org/package/mock) - Copyright (c) 2016 Jack Firth
+- [while-loop](https://pkgs.racket-lang.org/package/while-loop) - Copyright info is not provided.
