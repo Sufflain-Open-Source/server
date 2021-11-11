@@ -8,7 +8,7 @@ Images are licensed under the **Creative Commons Attribution-NonCommercial-NoDer
 
 ## Docker container demo
 *The iteration is quick because there are no timetable changes.*
-[![asciicast](https://asciinema.org/a/446184.svg)](https://asciinema.org/a/446184?speed=1.5)
+[![asciicast](https://asciinema.org/a/tNy9FCfLo4vUDBpaG9Poyv331.svg)](https://asciinema.org/a/tNy9FCfLo4vUDBpaG9Poyv331?speed=1.5)
 
 ### Explanation
 The computed hashes are equal to those stored in the database.
