@@ -43,9 +43,9 @@
 (define LINK-XPATH "/@href/text()")
 
 ;; blog-post is a structure.
-;; It contains a title, link and order of the blog post.
+;; It contains a title, link of the blog post.
 ;; (blog-post string? string? number?)
-(struct blog-post [title link order])
+(struct blog-post [title link])
 
 ;; lesson is a structure.
 ;; It contains info about lesson.
@@ -57,7 +57,7 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
-;; group-timetable-as-jsexpr: string? number? (listof lesson?)
+;; group-timetable-as-jsexpr: string? (listof lesson?)
 ;; Make a jsexpr with timetable contents.
 (define (group-timetable-as-jsexpr link-title gtimetable)
   (let*
