@@ -53,6 +53,9 @@
                                  [HASHES         (cons BLOG-POST-HASH TBODYS-HASH)])
                               (post bpost TBODYS HASHES))) BLOG-POSTS)]
        [POSTS-HASHES (make-immutable-hasheq (map post-hashes POSTS))])
+    (for ([POST POSTS])
+      (add-post-order (get-database-info config) 
+                      (car (post-hashes POST)) (blog-post-order (post-blogpt POST)) token))
     (track-and-update POSTS config token)
     (remove-redundant POSTS-HASHES groups config token)))
 
@@ -102,7 +105,7 @@
                            (unless (hash-has-key? hashes key)
                              (delete-timetables groups key DB-INFO token)
                              (delete-hash-pair key DB-INFO token)
-                             )))))))
+                             (remove-post-order DB-INFO key token))))))))
 
 ;; remove-post-order: jsexpr? symbol? -> jsexpr?
 ;; Remove the blog post order from the database.

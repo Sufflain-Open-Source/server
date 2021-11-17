@@ -26,6 +26,7 @@
 (provide blog-post
          blog-post-title
          blog-post-link
+         blog-post-order
          lesson
          lesson-time
          lesson-data
@@ -45,7 +46,7 @@
 ;; blog-post is a structure.
 ;; It contains a title, link of the blog post.
 ;; (blog-post string? string? number?)
-(struct blog-post [title link])
+(struct blog-post [title link order])
 
 ;; lesson is a structure.
 ;; It contains info about lesson.
