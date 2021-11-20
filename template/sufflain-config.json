@@ -11,7 +11,8 @@
         "apiKey": "",
         "groupsPath": "",
         "timetablePath": "",
-        "hashesPath": ""
+        "hashesPath": "",
+        "postOrderPath": ""
     },
     "collegeSite": {
         "url": "",

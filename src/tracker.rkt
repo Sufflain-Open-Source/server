@@ -53,6 +53,9 @@
                                  [HASHES         (cons BLOG-POST-HASH TBODYS-HASH)])
                               (post bpost TBODYS HASHES))) BLOG-POSTS)]
        [POSTS-HASHES (make-immutable-hasheq (map post-hashes POSTS))])
+    (for ([POST POSTS])
+      (add-post-order (get-database-info config) 
+                      (car (post-hashes POST)) (blog-post-order (post-blogpt POST)) token))
     (track-and-update POSTS config token)
     (remove-redundant POSTS-HASHES groups config token)))
 
@@ -62,11 +65,10 @@
   (let* ([DB-HASHES (get-hashes/safe config token)]
          [get-db-vhash        (lambda (post-khash) 
                                 (hash-ref DB-HASHES post-khash))]
-         [add-or-update-data  (lambda (db-info blog-post-title post-order post-khash post-vhash timetables) 
+         [add-or-update-data  (lambda (db-info blog-post-title post-khash post-vhash timetables) 
                                 (define KHASH-STRING (symbol->string post-khash))
                                 (add-all-groups-timetables db-info
                                                            blog-post-title
-                                                           post-order
                                                            KHASH-STRING
                                                            token
                                                            timetables)
@@ -78,14 +80,13 @@
                  [POST-VHASH  (cdr (post-hashes post))]
                  [BPOST       (post-blogpt post)]
                  [BPOST-TITLE (blog-post-title BPOST)]
-                 [BPOST-ORDER (blog-post-order BPOST)]
                  [TIMETABLES  (select-all-groups-timetables (post-data post))])
             (unless (if (hash-has-key? DB-HASHES POST-KHASH)
                         (if (equal? (get-db-vhash POST-KHASH) POST-VHASH)
                             #t
                             #f)
                         #f)
-              (add-or-update-data DB-INFO BPOST-TITLE BPOST-ORDER POST-KHASH POST-VHASH TIMETABLES))))))))
+              (add-or-update-data DB-INFO BPOST-TITLE POST-KHASH POST-VHASH TIMETABLES))))))))
 
 ;; remove-redundant: (listof hashes) group-list jsexpr? string? -> void?
 ;; Remove redundant timetables for each group.
@@ -103,7 +104,21 @@
                          (lambda (key val)
                            (unless (hash-has-key? hashes key)
                              (delete-timetables groups key DB-INFO token)
-                             (delete-hash-pair key DB-INFO token))))))))
+                             (delete-hash-pair key DB-INFO token)
+                             (remove-post-order DB-INFO key token))))))))
+
+;; remove-post-order: jsexpr? symbol? -> jsexpr?
+;; Remove the blog post order from the database.
+(define (remove-post-order db-info khash token)
+  (define ORDERS-PATH (database-order-path db-info))
+  (http-delete (string-append (database-url db-info) 
+                              ORDERS-PATH "/" (symbol->string khash) ".json" "?auth=" token)))
+
+;; add-post-order: jsexpr? symbol? number? string? -> jsexpr?
+;; Add a number that represents a post order on the blog page.
+(define (add-post-order db-info khash order token)
+  (define ORDERS-PATH (database-order-path db-info))
+  (add db-info (number->string order) (string-append ORDERS-PATH "/" (symbol->string khash)) token))
 
 ;; get-hashes/safe: jsexpr? -> hash?
 ;; Get hashes from the DB.

@@ -44,7 +44,7 @@
 (define LINK-XPATH "/@href/text()")
 
 ;; blog-post is a structure.
-;; It contains a title, link and order of the blog post.
+;; It contains a title, link of the blog post.
 ;; (blog-post string? string? number?)
 (struct blog-post [title link order])
 
@@ -58,16 +58,15 @@
 ;; (timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
-;; group-timetable-as-jsexpr: string? number? (listof lesson?)
+;; group-timetable-as-jsexpr: string? (listof lesson?)
 ;; Make a jsexpr with timetable contents.
-(define (group-timetable-as-jsexpr link-title post-order gtimetable)
+(define (group-timetable-as-jsexpr link-title gtimetable)
   (let*
       ([TITLE          (group-timetable-title gtimetable)]
        [LESSONS        (group-timetable-lessons gtimetable)]
        [LESSONS/JSEXPR (map lesson->jsexpr LESSONS)])
     (make-immutable-hasheq `((title     . ,TITLE)
                              (linkTitle . ,link-title)
-                             (postOrder . ,post-order)
                              (lessons   . ,LESSONS/JSEXPR)))))
 
 ;; lesson->jsexpr: lesson? -> jsexpr
@@ -244,30 +243,12 @@
   (define EXAMPLE-LESSON (lesson "10.00 &ndash; 11.00" '("КС")))
   (define EXAMPLE-LESSON/JSEXPR (lesson->jsexpr EXAMPLE-LESSON))
   
-  #;(check-equal? 
-     (all-groups-timetables-as-jsexpr "hash"
-                                      "Расписание на ... дату"
-                                      (list (group-timetable "СА21-19 ауд.304"
-                                                             `(,EXAMPLE-LESSON))))
-     (list
-      (make-immutable-hasheq 
-       `((СА21-19
-          .
-          ,(make-immutable-hasheq `((hash
-                                     . 
-                                     ,(make-immutable-hasheq 
-                                       `((title     . "СА21-19 ауд.304")
-                                         (linkTitle . "Расписание на ... дату")
-                                         (lessons   . (,EXAMPLE-LESSON/JSEXPR))))))))))))
-  
   (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
-                                           0
                                            (group-timetable "СА21-19 ауд.304" 
                                                             `(,EXAMPLE-LESSON)))
                 (make-immutable-hasheq 
                  `((title     . "СА21-19 ауд.304")
                    (linkTitle . "Расписание на ... дату")
-                   (postOrder . 0)
                    (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))
   
   (check-equal? (lesson->jsexpr (lesson "11.15 &ndash; 12.30" '("Предмет")))
@@ -329,7 +310,7 @@
              (define EXAMPLE-BLOG-POST
                (blog-post "Расписание занятий на 2 июля 2021 г."
                           "https://example.url/elektronnye_servisy/blog/\
-uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g/" 
+uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g/"
                           0))
              
              (check-pred null? (select-blog-posts null (GET-CONFIG-MOCK)
@@ -343,10 +324,5 @@ uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g/"
                             (car 
                              (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
-                           (blog-post-link EXAMPLE-BLOG-POST))
-             (check-equal? (blog-post-order 
-                            (car 
-                             (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
-                                                #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
-                           0)))
+                           (blog-post-link EXAMPLE-BLOG-POST))))
              

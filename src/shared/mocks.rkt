@@ -891,7 +891,8 @@
                                        (,CONFIG-DATABASE-API-KEY            . "uioy568y7")
                                        (,CONFIG-DATABASE-GROUPS-PATH-KEY    . "/g")
                                        (,CONFIG-DATABASE-TIMETABLE-PATH-KEY . "/t")
-                                       (,CONFIG-DATABASE-HASHES-PATH-KEY    . "/h"))))
+                                       (,CONFIG-DATABASE-HASHES-PATH-KEY    . "/h")
+                                       (,CONFIG-DATABASE-ORDER-PATH-KEY     . "/o"))))
             (,CONFIG-USER-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-USER-EMAIL-KEY    . "bruhmail@yeah.lol")

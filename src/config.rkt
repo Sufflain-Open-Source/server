@@ -40,6 +40,7 @@
          database-groups-path
          database-timetable-path
          database-hashes-path
+         database-order-path
          college-site
          college-site?
          college-site-url
@@ -70,8 +71,8 @@
 
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
-;; (database string? string? string? string?)
-(struct database [url api-key groups-path timetable-path hashes-path])
+;; (database string? string? string? string? string?)
+(struct database [url api-key groups-path timetable-path hashes-path order-path])
 
 ;; college-site is a structure.
 ;; It contains a site URL and a blog path.
@@ -110,15 +111,16 @@
 
 ;; get-database-info: jsexpr? -> database?
 ;; Read necessary info about the database from the config file.
-(define (get-database-info config) 
+(define (get-database-info config)
   (let*
       ([DATABASE       (hash-ref config   CONFIG-DATABASE-KEY)]
        [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
        [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
        [GROUPS-PATH    (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
        [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)]
-       [HASHES-PATH    (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)])
-    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH)))
+       [HASHES-PATH    (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)]
+       [ORDER-PATH     (hash-ref DATABASE CONFIG-DATABASE-ORDER-PATH-KEY)])
+    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH ORDER-PATH)))
 
 ;; get-college-site-info: jsexpr? -> college-site?
 ;; Read college site info from the config site.

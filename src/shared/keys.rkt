@@ -32,6 +32,7 @@
 (define CONFIG-DATABASE-GROUPS-PATH-KEY    'groupsPath)
 (define CONFIG-DATABASE-TIMETABLE-PATH-KEY 'timetablePath)
 (define CONFIG-DATABASE-HASHES-PATH-KEY    'hashesPath)
+(define CONFIG-DATABASE-ORDER-PATH-KEY     'postOrderPath)
 
 (define CONFIG-COLLEGE-SITE-KEY              'collegeSite)
 (define CONFIG-COLLEGE-SITE-URL-KEY          'url)
