@@ -186,13 +186,14 @@
 (module+ test
   (require rackunit)
   
-  (define EXAMPLE-BLOG-POST (blog-post "title" "link"))
+  (define EXAMPLE-BLOG-POST (blog-post "title" "link" 0))
   
   (check-equal? (tbodys-hash '((*TOP* (tbody)) (*TOP* (tbody))))
                 (md5 (open-input-string "<tbody /><tbody />")))
   
   (check-equal? (blog-post-hash (blog-post "Расписание занятий на ..."
-                                           "/some/path")) 
+                                           "/some/path"
+                                           0)) 
                 (md5 (open-input-string "Расписание занятий на ...@/some/path")))
   
   (check-equal? (blog-post->stirng EXAMPLE-BLOG-POST)
