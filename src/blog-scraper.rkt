@@ -144,7 +144,7 @@
 ;; Titles on the site are formatted inconsistently.
 ;; All of them have one thing in common — a group id.
 (define (select-titles tbody)
-  (select-from-tbody tbody GROUP-TIMETABLE-TITLE-XPATH (string-append GROUPS-REGEX ".*")))
+  (select-from-tbody tbody "//tr[1]/td[position()>1]//p" ".*"))
 
 ;; select-time: xexpr -> time-list
 ;; Select the time when classes start and end.
@@ -268,7 +268,7 @@
                                            (select-groups-timetables EXAMPLE-TBODY)))))
                            "11.00 &ndash; 12.30")
              (check-equal? (group-timetable-title (cadddr (select-groups-timetables EXAMPLE-TBODY)))
-                           "ИБ11-20 ауд.305")
+                           "<p align=\"center\">\n  <strong>ИБ11-20 ауд.305</strong>\n</p>")
              (check-equal? (car
                             (lesson-data (cadr 
                                           (group-timetable-lessons 
@@ -288,17 +288,7 @@
              (check-equal? (compose (list null null null null)) null)
              (check-equal? (compose (list (list "a" "c") (list "b" "d")))
                            (list (list "a" "b") (list "c" "d"))))
-  
-  (check-equal? (select-titles EXAMPLE-TBODY) '("Э11-20 ауд.319"
-                                                "Ф11-20 ауд.505"
-                                                "Б11-20 ауд.501"
-                                                "ИБ11-20 ауд.305"
-                                                "ИБ12-20 ауд.202"
-                                                "СА11-20 ауд.302"
-                                                "СА12-20 ауд."
-                                                "БА11-20 ауд.301"
-                                                "БА12-20 ауд.312"))
-  
+    
   (check-equal? (select-time EXAMPLE-TBODY) '("09.00 &ndash; 10.30"
                                               "11.00 &ndash; 12.30"
                                               "12.50 &ndash; 14.20"
