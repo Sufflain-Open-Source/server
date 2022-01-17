@@ -26,10 +26,13 @@
          racket/cmdline
          dyoo-while-loop)
 
+(define (get-firebase-token)
+  (get-token (user-email USER) (user-password USER) CONFIG))
+
 (define CONFIG (get-config))
 (define USER   (get-user-credentials CONFIG))
 (define DB     (get-database-info CONFIG))
-(define TOKEN  (get-token (user-email USER) (user-password USER) CONFIG))
+(define TOKEN  (get-firebase-token))
 (define GROUPS (get-groups CONFIG TOKEN))
 
 (define TRACKING-ITERATION-MSG-FIRST-PART "<<<---Tracking iteration [")
@@ -59,7 +62,8 @@
        [SITE-URL     (college-site-url COLLEGE-SITE)]
        [BLOG-PATH    (college-site-blog-path COLLEGE-SITE)]
        [FULL-URL     (string-append SITE-URL BLOG-PATH)]
-       [BLOG-PAGE    (get-page FULL-URL)])
+       [BLOG-PAGE    (get-page FULL-URL)]
+       [TOKEN        (get-firebase-token)])
     (track BLOG-PAGE GROUPS config TOKEN)))
 
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
