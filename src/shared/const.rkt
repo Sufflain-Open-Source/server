@@ -21,7 +21,7 @@
 
 (define GROUP-TIMETABLE-TITLE-XPATH "//p/strong/text()")
 
-(define GROUPS-REGEX "\\S{1,2}\\d{2}-\\d{2}")
+(define GROUPS-REGEX "\\p{Lu}{1,2}\\d{2}-\\d{2}")
 
 (define TIME-REGEX "\\d{2}\\.\\d{2}.*\\d{2}\\.\\d{2}")
 
