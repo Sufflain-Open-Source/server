@@ -71,12 +71,12 @@
 
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
-;; (database string? string? string? string? string?)
+;; (database string? string? string? string? string? string?)
 (struct database [url api-key groups-path timetable-path hashes-path order-path])
 
 ;; college-site is a structure.
 ;; It contains a site URL and a blog path.
-;; (college-site string? string? string? string?)
+;; (college-site string? string?)
 (struct college-site [url blog-path])
 
 ;; sleep-time is a structure.

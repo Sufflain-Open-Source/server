@@ -107,7 +107,7 @@
                              (delete-hash-pair key DB-INFO token)
                              (remove-post-order DB-INFO key token))))))))
 
-;; remove-post-order: jsexpr? symbol? -> jsexpr?
+;; remove-post-order: jsexpr? symbol? string? -> jsexpr?
 ;; Remove the blog post order from the database.
 (define (remove-post-order db-info khash token)
   (define ORDERS-PATH (database-order-path db-info))
@@ -120,7 +120,7 @@
   (define ORDERS-PATH (database-order-path db-info))
   (add db-info (number->string order) (string-append ORDERS-PATH "/" (symbol->string khash)) token))
 
-;; get-hashes/safe: jsexpr? -> hash?
+;; get-hashes/safe: jsexpr? string? -> hash?
 ;; Get hashes from the DB.
 (define (get-hashes/safe config token)
   (define h (get-hashes config token))
@@ -147,7 +147,7 @@
        [HASHES-PATH (database-hashes-path db)])
     (http-delete (string-append URL HASHES-PATH ".json" "?auth=" token))))
 
-;; delete-hash-pair: string? jsexpr? string? -> jsexpr?
+;; delete-hash-pair: symbol? jsexpr? string? -> jsexpr?
 ;; Locate a pair of hashes by khash and delete it.
 (define (delete-hash-pair khash db token)
   (let*
@@ -174,7 +174,7 @@
   (define BLOG-POST-STRING (blog-post->stirng bpost))
   (md5 (open-input-string BLOG-POST-STRING)))
 
-;; blog-post->stirng: blog-post? -> string?
+;; blog-post->string: blog-post? -> string?
 ;; Represent blog-post as a string of the following form:
 ;;   "<title>@<link>"
 (define (blog-post->stirng bpost)

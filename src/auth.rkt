@@ -24,7 +24,7 @@
 
 (provide get-token)
 
-;; get-token: string? string? -> string?
+;; get-token: string? string? jsexpr? -> string?
 ;; Get a sign in token for the database.
 (define (get-token email password config
                    #:db-info-mock [get-database-info get-database-info]

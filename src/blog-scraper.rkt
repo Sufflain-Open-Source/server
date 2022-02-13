@@ -44,21 +44,21 @@
 (define LINK-XPATH "/@href/text()")
 
 ;; blog-post is a structure.
-;; It contains a title, link of the blog post.
+;; It contains a title, link and order of the blog post.
 ;; (blog-post string? string? number?)
 (struct blog-post [title link order])
 
 ;; lesson is a structure.
-;; It contains info about lesson.
+;; It contains info about a lesson.
 ;; (lesson string? (listof string?))
 (struct lesson [time data])
 
 ;; group-timetable is a structure.
 ;; It contains a title with the group id and data about lessons for a specific day.
-;; (timetable string? (listof lesson?))
+;; (group-timetable string? (listof lesson?))
 (struct group-timetable [title lessons])
 
-;; group-timetable-as-jsexpr: string? (listof lesson?)
+;; group-timetable-as-jsexpr: string? group-timetable?
 ;; Make a jsexpr with timetable contents.
 (define (group-timetable-as-jsexpr link-title gtimetable)
   (let*
@@ -76,7 +76,7 @@
                            (data . ,(lesson-data lesson)))))
 
 ;; select-all-groups-timetables: (listof xexpr) -> (listof group-timetable?)
-;; Select all timetabes on page.
+;; Select all timetables on a page.
 (define (select-all-groups-timetables tbodys)
   (define GROUPED-TIMETABLES (map (lambda (tbody)
                                     (select-groups-timetables tbody)) tbodys))
@@ -166,7 +166,7 @@
 (define (select-tbodys page)
   ((sxpath TIMETABLE-TBODY-XPATH) page))
 
-;; select-blog-posts: xexpr -> (listof blog-post)
+;; select-blog-posts: xexpr jsexpr -> (listof blog-post)
 ;; Select blog posts from the blog page SXML.
 (define (select-blog-posts blog-page config
                            #:get-college-site-info-mock [get-college-site-info get-college-site-info])

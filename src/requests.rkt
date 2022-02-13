@@ -49,7 +49,7 @@
 (define (with-json-payload/put url-str json-str [request-pure-port put-pure-port])
   (http-request url-str #:json-payload json-str request-pure-port))
 
-;; with-json-payload: symbol? string? string? -> jsexpr?
+;; with-json-payload: string? -> jsexpr?
 ;; Perform an HTTP request with/without JSON payload.
 (define (http-request url-str #:json-payload [json-str null] request-pure-port)
   (let* ([URL                  (string->url url-str)]

@@ -49,7 +49,7 @@
   (define HASHES-PATH (database-hashes-path db-info))
   (add db-info (jsexpr->string vhash) (string-append HASHES-PATH "/" khash) token))
 
-;; get-hashes: jsexpr? -> jsexpr?
+;; get-hashes: jsexpr? string? -> jsexpr?
 ;; Get hashes from the DB.
 (define (get-hashes config token)
   (let*
@@ -59,7 +59,7 @@
        [REQUEST-URL (string-append DB-URL HASHES-PATH ".json" "?auth=" token)])
     (http-get REQUEST-URL)))
 
-;; get-groups: jsexpr? -> (listof string?)
+;; get-groups: jsexpr? string? -> (listof string?)
 ;; Get groups from the DB.
 (define (get-groups config token)
   (let*
