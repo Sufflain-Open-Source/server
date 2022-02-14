@@ -67,7 +67,7 @@
        [GROUPS-PATH (database-groups-path DB)])
     (add DB groups GROUPS-PATH auth-token)))
 
-;; get: jsexpr? string? string? -> any/c
+;; get: procedure? jsexpr? string? -> any/c
 (define (get get-db-path-proc config token)
   (let*
       ([DB          (get-database-info config)]
