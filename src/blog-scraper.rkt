@@ -21,7 +21,8 @@
          "config.rkt"
          "shared/const.rkt"
          sxml
-         racket/string)
+         racket/string
+         racket/list)
 
 (provide blog-post
          blog-post-title
@@ -94,8 +95,8 @@
        [LESSONS-DATA-RAW  (map (lambda (ld)
                                  (filter not-null?
                                          (map (lambda (element)
-                                                (map string-trim 
-                                                     ((sxpath "//p/text()") element))) ld))) 
+                                                (map string-trim
+                                                     ((sxpath "//p/text()") element))) ld)))
                                LESSONS-DATA)]
        [LESSONS-WITH-TIME (map (lambda (lessons)
                                  (for/list ([lesson-data lessons]
@@ -150,7 +151,13 @@
 ;; Select the time when classes start and end.
 ;; Time is formatted as hh \u2013 mm.
 (define (select-time tbody)
-  (select-from-tbody tbody "//tr[position()>1]/td[1]/p//text()" ".*"))
+  (let*
+      ([BASE-XPATH-EXPRESSION "//tr[position()>1]/td[1]"]
+       [SELECTED-TIME (select-from-tbody tbody (string-append BASE-XPATH-EXPRESSION "/p//text()") ".*")])
+    (if (equal? SELECTED-TIME null)
+        (let ([NUMBER-OF-LESSONS (length (select-from-tbody tbody BASE-XPATH-EXPRESSION ".*"))])
+          (make-list NUMBER-OF-LESSONS "N/A"))
+        SELECTED-TIME)))
 
 ;; select-from-tbody: xexpr string? string? -> (listof string?)
 ;; Select data from the provided <tbody>.
@@ -174,7 +181,7 @@
       ([BLOG-POSTS        ((sxpath BLOG-LIST-ELEMENT-XPATH) blog-page)]
        [BLOG-POSTS-LENGTH (length BLOG-POSTS)]
        [get-by-xpath  (lambda (xpath element)
-                        (car 
+                        (car
                          ((sxpath xpath) element)))])
     (for/list ([element BLOG-POSTS]
                [index   (build-list BLOG-POSTS-LENGTH values)])
@@ -193,15 +200,15 @@
            rackunit
            mock
            racket/function)
-  
+
   (define COLLEGE-SITE-INFO-MOCK
-    (mock #:behavior 
+    (mock #:behavior
           (const
            (college-site "https://example.url" ""))))
-  
+
   ;; Scraped from the blog page
   (define EXAMPLE-BLOG
-    '(div 
+    '(div
       (@ (class "kris-blogitem-tabs"))
       (div
        (@ (class "kris-blogitem-all"))
@@ -227,9 +234,9 @@
                (href
                 "/elektronnye_servisy/blog/uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g"))
               "Расписание занятий на 2 июля 2021 г."))))))))))
-  
+
   (define EXAMPLE-TABLE
-    '(*TOP* 
+    '(*TOP*
       (tbody
        (tr
         (td "СА21-19, ауд. 304б"))
@@ -239,48 +246,48 @@
        (tr
         (td (p "11.15 " (&ndash) " 12.30"))
         (td (p "Lesson data"))))))
-  
+
   (define EXAMPLE-LESSON (lesson "10.00 &ndash; 11.00" '("КС")))
   (define EXAMPLE-LESSON/JSEXPR (lesson->jsexpr EXAMPLE-LESSON))
-  
-  (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату" 
-                                           (group-timetable "СА21-19 ауд.304" 
+
+  (check-equal? (group-timetable-as-jsexpr "Расписание на ... дату"
+                                           (group-timetable "СА21-19 ауд.304"
                                                             `(,EXAMPLE-LESSON)))
-                (make-immutable-hasheq 
+                (make-immutable-hasheq
                  `((title     . "СА21-19 ауд.304")
                    (linkTitle . "Расписание на ... дату")
                    (lessons   . (,EXAMPLE-LESSON/JSEXPR)))))
-  
+
   (check-equal? (lesson->jsexpr (lesson "11.15 &ndash; 12.30" '("Предмет")))
                 #hasheq((time . "11.15 &ndash; 12.30")
                         (data . ("Предмет"))))
-  
+
   (check-pred (lambda (result)
-                (andmap group-timetable? result)) 
+                (andmap group-timetable? result))
               (select-all-groups-timetables (cdr
                                              (select-tbodys EXAMPLE-TIMETABLE-PAGE))))
-  
+
   #;(test-case "select-groups-timetables"
-             (check-equal? (select-groups-timetables null) null)
-             (check-equal? (lesson-time (cadr 
-                                         (group-timetable-lessons 
-                                          (cadr
-                                           (select-groups-timetables EXAMPLE-TBODY)))))
-                           "11.00 &ndash; 12.30")
-             (check-equal? (group-timetable-title (cadddr (select-groups-timetables EXAMPLE-TBODY)))
-                           "<p align=\"center\">\n  <strong>ИБ11-20 ауд.305</strong>\n</p>")
-             (check-equal? (car
-                            (lesson-data (cadr 
-                                          (group-timetable-lessons 
-                                           (cadddr 
-                                            (select-groups-timetables EXAMPLE-TBODY))))))
-                           "Химия"))
-  
+               (check-equal? (select-groups-timetables null) null)
+               (check-equal? (lesson-time (cadr
+                                           (group-timetable-lessons
+                                            (cadr
+                                             (select-groups-timetables EXAMPLE-TBODY)))))
+                             "11.00 &ndash; 12.30")
+               (check-equal? (group-timetable-title (cadddr (select-groups-timetables EXAMPLE-TBODY)))
+                             "<p align=\"center\">\n  <strong>ИБ11-20 ауд.305</strong>\n</p>")
+               (check-equal? (car
+                              (lesson-data (cadr
+                                            (group-timetable-lessons
+                                             (cadddr
+                                              (select-groups-timetables EXAMPLE-TBODY))))))
+                             "Химия"))
+
   (test-case "select-lessons-data"
              (check-equal? (select-lessons-data null) null)
              (check-equal? (select-lessons-data EXAMPLE-TABLE) '(((td (p "Lesson data"))
                                                                   (td (p "Lesson data"))))))
-  
+
   (test-case "compose"
              (check-equal? (compose (list (list 1 2 3) (list 1 2 3) (list 1 2 3)))
                            (list (list 1 1 1) (list 2 2 2) (list 3 3 3)))
@@ -288,31 +295,30 @@
              (check-equal? (compose (list null null null null)) null)
              (check-equal? (compose (list (list "a" "c") (list "b" "d")))
                            (list (list "a" "b") (list "c" "d"))))
-    
+
   #;(check-equal? (select-time EXAMPLE-TBODY) '("09.00 &ndash; 10.30"
-                                              "11.00 &ndash; 12.30"
-                                              "12.50 &ndash; 14.20"
-                                              "14.30 &ndash; 16.00"))
-  
+                                                "11.00 &ndash; 12.30"
+                                                "12.50 &ndash; 14.20"
+                                                "14.30 &ndash; 16.00"))
+
   (check-equal? (select-tbodys EXAMPLE-TIMETABLE-PAGE) `(,EXAMPLE-TBODY))
-  
+
   (test-case "select-blog-posts"
              (define EXAMPLE-BLOG-POST
                (blog-post "Расписание занятий на 2 июля 2021 г."
                           "https://example.url/elektronnye_servisy/blog/\
 uchchast/raspisanie-zanyatiy-na-2-iyulya-2021-g/"
                           0))
-             
+
              (check-pred null? (select-blog-posts null (GET-CONFIG-MOCK)
                                                   #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK))
-             (check-equal? (blog-post-title 
-                            (car 
+             (check-equal? (blog-post-title
+                            (car
                              (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-title EXAMPLE-BLOG-POST))
-             (check-equal? (blog-post-link 
-                            (car 
+             (check-equal? (blog-post-link
+                            (car
                              (select-blog-posts EXAMPLE-BLOG (GET-CONFIG-MOCK)
                                                 #:get-college-site-info-mock COLLEGE-SITE-INFO-MOCK)))
                            (blog-post-link EXAMPLE-BLOG-POST))))
-             
