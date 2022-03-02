@@ -145,7 +145,16 @@
 ;; Titles on the site are formatted inconsistently.
 ;; All of them have one thing in common — a group id.
 (define (select-titles tbody)
-  (select-from-tbody tbody "//tr[1]/td[position()>1]//p" ".*"))
+  (let*
+      ([TITLES-XML              (select-from-tbody tbody "//tr[1]/td[position()>1]//p" ".*")]
+       [extract-title-text-only (lambda (title) ; We need this to extract only titles' text instead of full XML tags.
+                                  (foldr string-append
+                                         ""
+                                         ((sxpath "//text()")
+                                          (ssax:xml->sxml
+                                           (open-input-string title) null))))])
+    (for/list ([TITLE/NOT-CLEAN TITLES-XML])
+      (extract-title-text-only TITLE/NOT-CLEAN))))
 
 ;; select-time: xexpr -> time-list
 ;; Select the time when classes start and end.
@@ -153,9 +162,12 @@
 (define (select-time tbody)
   (let*
       ([BASE-XPATH-EXPRESSION "//tr[position()>1]/td[1]"]
-       [SELECTED-TIME (select-from-tbody tbody (string-append BASE-XPATH-EXPRESSION "/p//text()") ".*")])
+       [SELECTED-TIME         (select-from-tbody tbody
+                                                 (string-append BASE-XPATH-EXPRESSION
+                                                                "/p//text()") ".*")])
     (if (equal? SELECTED-TIME null)
-        (let ([NUMBER-OF-LESSONS (length (select-from-tbody tbody BASE-XPATH-EXPRESSION ".*"))])
+        (let ([NUMBER-OF-LESSONS (length
+                                  (select-from-tbody tbody BASE-XPATH-EXPRESSION ".*"))])
           (make-list NUMBER-OF-LESSONS "N/A"))
         SELECTED-TIME)))
 
