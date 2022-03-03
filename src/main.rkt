@@ -23,6 +23,7 @@
          "auth.rkt"
          "tracker.rkt"
          "scraper.rkt"
+         "teachers-names-loader.rkt"
          racket/cmdline
          dyoo-while-loop)
 
@@ -38,7 +39,7 @@
 (define TRACKING-ITERATION-MSG-FIRST-PART "<<<---Tracking iteration [")
 (define TRACKING-ITERATION-MSG-LAST-PART "]--->>>")
 
-(define TRACKING-ITERATION-START-MSG 
+(define TRACKING-ITERATION-START-MSG
   (string-append TRACKING-ITERATION-MSG-FIRST-PART "START" TRACKING-ITERATION-MSG-LAST-PART))
 (define TRACKING-ITERATION-END-MSG
   (string-append TRACKING-ITERATION-MSG-FIRST-PART "END" TRACKING-ITERATION-MSG-LAST-PART))
@@ -47,7 +48,7 @@
 
 (define (main)
   (let*
-      ([APP-PROPS    (get-app-props CONFIG)]       
+      ([APP-PROPS    (get-app-props CONFIG)]
        [SLEEP-TIME   (app-props-sleep-time APP-PROPS)])
     (while #t
            (displayln TRACKING-ITERATION-START-MSG)
@@ -66,20 +67,32 @@
        [TOKEN        (get-firebase-token)])
     (track BLOG-PAGE GROUPS config TOKEN)))
 
+;; read-names-and-add-to-db: string? jsexpr?
+;; Read names from a file and upload to the DB.
+(define (read-names-and-add-to-db file-path config)
+  (let
+      ([NAMES (read-names file-path)]
+       [TOKEN (get-firebase-token)])
+    (displayln
+     (add-names NAMES TOKEN config))))
+
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
 (define (get-groups-and-add-to-db url-str config)
   (let
       ([GROUPS (extract-groups-from-page url-str)])
-    (displayln 
+    (displayln
      (add-groups (group-list-to-json GROUPS) TOKEN config))))
 
 (command-line #:program "sfl"
               #:once-any
-              (("-g" "--get-groups") PAGE-URL 
+              (("-g" "--get-groups") PAGE-URL
                                      "Get groups and place them into the database. \
 \nExisting groups' data will be overwritten if it exists!"
                                      (get-groups-and-add-to-db PAGE-URL CONFIG))
               (("-t" "--track") "Track timetables changes and upload them to the database."
                                 (main))
+              (("-n" "--read-names") FILE-PATH
+                                     "Read teachers' names and upload them to the DB."
+                                     (read-names-and-add-to-db FILE-PATH CONFIG))
               #:args () (void))

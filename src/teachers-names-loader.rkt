@@ -21,6 +21,8 @@
 
 (provide (all-defined-out))
 
+(define BASE-NAMESPACE (make-base-namespace))
+
 ;; read-names: string? -> (or/c (listof string?) null)
 ;; Reads the teachers' names from a file that contains raw Racket list data.
 (define (read-names file-path)
@@ -28,7 +30,7 @@
       (let*
           ([FILE-PORT (open-input-file file-path)]
            [FILE-DATA (read FILE-PORT)]
-           [NAMES     (eval FILE-DATA)])
+           [NAMES     (eval FILE-DATA BASE-NAMESPACE)])
         (map (lambda (name) ; We need to remove redundant spaces.
                (string-normalize-spaces
                 (string-trim name))) NAMES))
