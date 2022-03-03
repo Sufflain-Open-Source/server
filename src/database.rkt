@@ -28,7 +28,17 @@
          get-hashes
          get-groups
          add-groups
+         add-names
          add)
+
+;; add-names: (listof string?) string? jsexpr?
+;; Add teachers' names.
+(define (add-names names auth-token config)
+  (let*
+      ([DB         (get-database-info config)]
+       [NAMES-PATH (database-teachers-names-path DB)]
+       [NAMES/JSON (jsexpr->string names)])
+    (add DB NAMES/JSON NAMES-PATH auth-token)))
 
 ;; add-all-groups-timetables: jsexpr? string? string? string? (listof group-timetable?) -> jsexpr?
 ;; Add timetables for all groups.
@@ -36,10 +46,10 @@
   (for ([table timetables])
     (let* ([TITLE          (group-timetable-title table)]
            [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) TITLE))]
-           [TIMETABLE-JSON (jsexpr->string 
+           [TIMETABLE-JSON (jsexpr->string
                             (group-timetable-as-jsexpr link-title table))])
-      (add db-info 
-           TIMETABLE-JSON 
+      (add db-info
+           TIMETABLE-JSON
            (string-append (database-timetable-path db-info) "/" GROUP-ID "/" khash)
            token))))
 
@@ -90,13 +100,13 @@
            rackunit
            racket/function
            mock)
-  
-  (define GET-DATABASE-INFO-MOCK (mock 
-                                  #:behavior (const 
+
+  (define GET-DATABASE-INFO-MOCK (mock
+                                  #:behavior (const
                                               (get-database-info (GET-CONFIG-MOCK)))))
   (define WITH-JSON-PAYLOAD-MOCK (mock
                                   #:behavior (const "[\"СА21-19\"]")))
-    
+
   (check-equal? (add (GET-DATABASE-INFO-MOCK) "[\"СА21-19\"]" "" ""
                      #:get-database-info-mock GET-DATABASE-INFO-MOCK
                      #:with-json-payload-mock WITH-JSON-PAYLOAD-MOCK) "[\"СА21-19\"]"))

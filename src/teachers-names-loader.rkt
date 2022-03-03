@@ -17,7 +17,9 @@
 
 #lang racket/base
 
-(provide all-defined-out)
+(require racket/string)
+
+(provide (all-defined-out))
 
 ;; read-names: string? -> (or/c (listof string?) null)
 ;; Reads the teachers' names from a file that contains raw Racket list data.
@@ -27,5 +29,7 @@
           ([FILE-PORT (open-input-file file-path)]
            [FILE-DATA (read FILE-PORT)]
            [NAMES     (eval FILE-DATA)])
-        NAMES)
+        (map (lambda (name) ; We need to remove redundant spaces.
+               (string-normalize-spaces
+                (string-trim name))) NAMES))
       null))

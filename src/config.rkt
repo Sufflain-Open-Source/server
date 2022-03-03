@@ -73,7 +73,7 @@
 
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
-;; (database string? string? string? string? string? string?)
+;; (database string? string? string? string? string? string? string? string?)
 (struct database [url
                   api-key
                   groups-path
