@@ -41,6 +41,8 @@
          database-timetable-path
          database-hashes-path
          database-order-path
+         database-teachers-names-path
+         database-teachers-timetable-path
          college-site
          college-site?
          college-site-url
@@ -52,8 +54,8 @@
          get-config)
 
 (define CONFIG-DIR-PATH
-  (string-append 
-   (path->string 
+  (string-append
+   (path->string
     (find-system-path 'home-dir))
    "/.config"))
 (define CONFIG-PATH
@@ -72,7 +74,14 @@
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
 ;; (database string? string? string? string? string? string?)
-(struct database [url api-key groups-path timetable-path hashes-path order-path])
+(struct database [url
+                  api-key
+                  groups-path
+                  timetable-path
+                  hashes-path
+                  order-path
+                  teachers-names-path
+                  teachers-timetable-path])
 
 ;; college-site is a structure.
 ;; It contains a site URL and a blog path.
@@ -113,14 +122,16 @@
 ;; Read necessary info about the database from the config file.
 (define (get-database-info config)
   (let*
-      ([DATABASE       (hash-ref config   CONFIG-DATABASE-KEY)]
-       [URL            (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
-       [API-KEY        (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
-       [GROUPS-PATH    (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
-       [TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)]
-       [HASHES-PATH    (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)]
-       [ORDER-PATH     (hash-ref DATABASE CONFIG-DATABASE-ORDER-PATH-KEY)])
-    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH ORDER-PATH)))
+      ([DATABASE                (hash-ref config   CONFIG-DATABASE-KEY)]
+       [URL                     (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
+       [API-KEY                 (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
+       [GROUPS-PATH             (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
+       [TIMETABLE-PATH          (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)]
+       [HASHES-PATH             (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)]
+       [ORDER-PATH              (hash-ref DATABASE CONFIG-DATABASE-ORDER-PATH-KEY)]
+       [NAMES-PATH              (hash-ref DATABASE CONFIG-DATABASE-NAMES-PATH-KEY)]
+       [TEACHERS-TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TEACHERS-TIMETABLE-PATH-KEY)])
+    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH ORDER-PATH NAMES-PATH TEACHERS-TIMETABLE-PATH)))
 
 ;; get-college-site-info: jsexpr? -> college-site?
 ;; Read college site info from the config site.
@@ -157,21 +168,21 @@
   (require "shared/mocks.rkt"
            mock
            rackunit)
-  
+
   (define DIR-OR-FILE-EXISTS-MOCK/TRUE  (mock #:behavior (const #t)))
   (define DIR-OR-FILE-EXISTS-MOCK/FALSE (mock #:behavior (const #f)))
   (define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
   (define EXAMPLE-CONFIG (GET-CONFIG-MOCK))
-  
+
   (check-pred identity-toolkit? (get-identity-toolkit EXAMPLE-CONFIG))
   (check-pred user?             (get-user-credentials EXAMPLE-CONFIG))
   (check-pred database?         (get-database-info EXAMPLE-CONFIG))
   (check-pred college-site?     (get-college-site-info EXAMPLE-CONFIG))
   (check-pred app-props?        (get-app-props EXAMPLE-CONFIG))
-  
+
   (check-pred jsexpr? (get-config #:config-exists-mock DIR-OR-FILE-EXISTS-MOCK/TRUE
                                   #:file-reader-mock   STRING-PORT-MOCK))
-  
+
   (test-case "config-exists?"
              (check-true  (config-exists? #:dir-check-mock  DIR-OR-FILE-EXISTS-MOCK/TRUE
                                           #:file-check-mock DIR-OR-FILE-EXISTS-MOCK/TRUE))
