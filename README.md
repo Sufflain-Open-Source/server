@@ -88,7 +88,20 @@ sfl -g [specific timetable url]
 
 The command above will extract groups from the page and add them to the database.
 
-2. Run the app:
+2. Get teachers' names from a file and upload them to the DB.
+
+*The file must contain a valid Racket list of strings:*
+`'("Teacher1's name" "Teacher2's name")`, for example.
+
+```bash
+sfl -n [file path]
+```
+or
+```bash
+sfl --read-names [file path]
+```
+
+3. Run the app:
 ```bash
 sfl --track
 ```
