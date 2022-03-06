@@ -25,6 +25,19 @@
 
 (provide (all-defined-out))
 
+;; teacher-timetable:
+;; (teacher-timetable string? (listof group-timetable?))
+(struct teacher-timetable [teacher group-timetables])
+
+;; select-all-teachers-timetables: (listof string?) (listof group-timetable?) -> (listof teacher-timetable?)
+;; Select timetables for all teachers.
+(define (select-all-teachers-timetables teachers timetables)
+  (filter (lambda (item)
+            (not (empty? (teacher-timetable-group-timetables item))))
+          (for/list
+              ([TEACHER teachers])
+            (teacher-timetable TEACHER (select-all-teacher-timetables TEACHER timetables)))))
+
 ;; select-all-teacher-timetables: string? (listof group-timetable?) -> (listof group-timetable?)
 ;; Selects timetables only with the teacher's name.
 (define (select-all-teacher-timetables teacher timetables)
