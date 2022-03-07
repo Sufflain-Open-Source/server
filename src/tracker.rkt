@@ -38,7 +38,7 @@
 ;; (post blog-post? (listof xexpr) pair?)
 (struct post [blogpt data hashes])
 
-;; track: xexpr group-list (listof string?) jsexpr? string? -> void?
+;; track: xexpr group-list (listof teacher?) jsexpr? string? -> void?
 ;; Find changes in the blog page and timetables, add to the DB.
 (define (track blog-page groups teachers config token
                #:track-update-mock [track-and-update track-and-update]
@@ -60,19 +60,19 @@
     (track-and-update POSTS teachers config token)
     (remove-redundant POSTS-HASHES groups teachers config token)))
 
-;; track-and-update: (listof post?) (listof string?) jsexpr? string? -> void?
+;; track-and-update: (listof post?) (listof teacher?) jsexpr? string? -> void?
 ;; Track timetable changes and add to the DB.
 (define (track-and-update posts teachers config token)
-  (let* ([DB-HASHES (get-hashes/safe config token)]
-         [get-db-vhash        (lambda (post-khash)
-                                (hash-ref DB-HASHES post-khash))]
-         [add-or-update-data  (lambda (data-adder db-info blog-post-title post-khash post-vhash timetables)
-                                (define KHASH-STRING (symbol->string post-khash))
-                                (data-adder db-info
-                                            blog-post-title
-                                            KHASH-STRING
-                                            token
-                                            timetables))])
+  (let* ([DB-HASHES          (get-hashes/safe config token)]
+         [get-db-vhash       (lambda (post-khash)
+                               (hash-ref DB-HASHES post-khash))]
+         [add-or-update-data (lambda (data-adder db-info blog-post-title post-khash post-vhash timetables)
+                               (define KHASH-STRING (symbol->string post-khash))
+                               (data-adder db-info
+                                           blog-post-title
+                                           KHASH-STRING
+                                           token
+                                           timetables))])
     (unless (null? posts)
       (let ([DB-INFO (get-database-info config)])
         (for ([post posts])
@@ -93,7 +93,7 @@
               (add-or-update-data add-all-teachers-timetables
                                   DB-INFO BPOST-TITLE POST-KHASH POST-VHASH TEACHERS-TIMETABLES))))))))
 
-;; remove-redundant: (listof hashes) group-list (listof string?) jsexpr? string? -> void?
+;; remove-redundant: (listof hashes) group-list (listof teacher?) jsexpr? string? -> void?
 ;; Remove redundant timetables for each group.
 (define (remove-redundant hashes groups teachers config token)
   (let ([DB-HASHES (get-hashes/safe config token)]
@@ -133,7 +133,7 @@
       #hasheq()
       h))
 
-;; delete-timetables: group-list (listof string?) string? jsexpr? string? -> void?
+;; delete-timetables: group-list (listof teacher?) string? jsexpr? string? -> void?
 ;; Locate a timetable by khash and delete for each group.
 (define (delete-timetables groups teachers khash db token)
   (let*

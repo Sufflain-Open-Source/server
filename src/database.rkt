@@ -35,7 +35,7 @@
          add-names
          add)
 
-;; add-names: (listof string?) string? jsexpr?
+;; add-names: (listof string?) string? jsexpr? -> jsexpr?
 ;; Add teachers' names.
 (define (add-names names auth-token config)
   (let*
@@ -50,11 +50,6 @@
 ;; add-all-teachers-timetables: jsexpr? string? string? string? (listof teacher-timetable?) -> jsepxr?
 ;; Add timetables for all teachers.
 (define (add-all-teachers-timetables db-info link-title khash token timetables)
-  (define (make-full-path-to path teacher)
-    (string-append (database-teachers-timetable-path db-info) "/"
-                   (teacher-hash teacher) "/"
-                   khash "/"
-                   path))
   (for ([TABLE timetables])
     (let* ([TEACHER              (teacher-timetable-teacher TABLE)]
            [TIMETABLES           (teacher-timetable-group-timetables TABLE)]

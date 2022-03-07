@@ -62,7 +62,7 @@
 
 ;; find-name-in-lesson-data: string? (listof string?) -> (or/c string? boolean?)
 ;; Find a teacher's name in lesson's data.
-;; It can find a name even if it is written with up to 3 typos.
+;; It can find a name even if it is written with a small amount of typos.
 ;; Returns #f if the name's not found.
 (define (find-name-in-lesson-data name lesson-data)
   (let*
