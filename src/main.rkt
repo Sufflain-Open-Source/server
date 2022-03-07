@@ -30,11 +30,12 @@
 (define (get-firebase-token)
   (get-token (user-email USER) (user-password USER) CONFIG))
 
-(define CONFIG (get-config))
-(define USER   (get-user-credentials CONFIG))
-(define DB     (get-database-info CONFIG))
-(define TOKEN  (get-firebase-token))
-(define GROUPS (get-groups CONFIG TOKEN))
+(define CONFIG   (get-config))
+(define USER     (get-user-credentials CONFIG))
+(define DB       (get-database-info CONFIG))
+(define TOKEN    (get-firebase-token))
+(define GROUPS   (get-groups CONFIG TOKEN))
+(define TEACHERS (get-names CONFIG TOKEN))
 
 (define TRACKING-ITERATION-MSG-FIRST-PART "<<<---Tracking iteration [")
 (define TRACKING-ITERATION-MSG-LAST-PART "]--->>>")
@@ -65,7 +66,7 @@
        [FULL-URL     (string-append SITE-URL BLOG-PATH)]
        [BLOG-PAGE    (get-page FULL-URL)]
        [TOKEN        (get-firebase-token)])
-    (track BLOG-PAGE GROUPS config TOKEN)))
+    (track BLOG-PAGE GROUPS TEACHERS config TOKEN)))
 
 ;; read-names-and-add-to-db: string? jsexpr?
 ;; Read names from a file and upload to the DB.

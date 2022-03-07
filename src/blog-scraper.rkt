@@ -63,12 +63,14 @@
 ;; Make a jsexpr with timetable contents.
 (define (group-timetable-as-jsexpr link-title gtimetable)
   (let*
-      ([TITLE          (group-timetable-title gtimetable)]
-       [LESSONS        (group-timetable-lessons gtimetable)]
-       [LESSONS/JSEXPR (map lesson->jsexpr LESSONS)])
-    (make-immutable-hasheq `((title     . ,TITLE)
-                             (linkTitle . ,link-title)
-                             (lessons   . ,LESSONS/JSEXPR)))))
+      ([TITLE                (group-timetable-title gtimetable)]
+       [LESSONS              (group-timetable-lessons gtimetable)]
+       [LESSONS/JSEXPR       (map lesson->jsexpr LESSONS)]
+       [TIMETABLE-HASH-TABLE (make-immutable-hasheq `((title     . ,TITLE)
+                                                      (lessons   . ,LESSONS/JSEXPR)))])
+    (if (equal? link-title "")
+        TIMETABLE-HASH-TABLE
+        (hash-set TIMETABLE-HASH-TABLE 'linkTitle link-title))))
 
 ;; lesson->jsexpr: lesson? -> jsexpr
 ;; Make a jsexpr with a lesson info.

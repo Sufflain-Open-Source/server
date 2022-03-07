@@ -19,14 +19,18 @@
 
 (require "config.rkt"
          "blog-scraper.rkt"
-         "shared/const.rkt"
          "requests.rkt"
-         json)
+         "teachers-timetable-builder.rkt"
+         "util.rkt"
+         json
+         openssl/md5)
 
-(provide add-all-groups-timetables
+(provide add-all-teachers-timetables
+         add-all-groups-timetables
          add-hash
          get-hashes
          get-groups
+         get-names
          add-groups
          add-names
          add)
@@ -35,19 +39,49 @@
 ;; Add teachers' names.
 (define (add-names names auth-token config)
   (let*
-      ([DB         (get-database-info config)]
-       [NAMES-PATH (database-teachers-names-path DB)]
-       [NAMES/JSON (jsexpr->string names)])
+      ([DB           (get-database-info config)]
+       [NAMES-PATH   (database-teachers-names-path DB)]
+       [NAMES-HASHES (for/list
+                         ([NAME names])
+                       `(,(string->symbol (md5 (open-input-string NAME))) . ,NAME))]
+       [NAMES/JSON   (jsexpr->string (make-immutable-hasheq NAMES-HASHES))])
     (add DB NAMES/JSON NAMES-PATH auth-token)))
+
+;; add-all-teachers-timetables: jsexpr? string? string? string? (listof teacher-timetable?) -> jsepxr?
+;; Add timetables for all teachers.
+(define (add-all-teachers-timetables db-info link-title khash token timetables)
+  (define (make-full-path-to path teacher)
+    (string-append (database-teachers-timetable-path db-info) "/"
+                   (teacher-hash teacher) "/"
+                   khash "/"
+                   path))
+  (for ([TABLE timetables])
+    (let* ([TEACHER              (teacher-timetable-teacher TABLE)]
+           [TIMETABLES           (teacher-timetable-group-timetables TABLE)]
+           [NUMBER-OF-TIMETABLES (length TIMETABLES)]
+           [TABLES               (for/list ([GROUP-TIMETABLE TIMETABLES]
+                                            [i               NUMBER-OF-TIMETABLES])
+                                   (let*
+                                       ([TITLE            (group-timetable-title GROUP-TIMETABLE)]
+                                        [GROUP-ID         (select-group-from-title TITLE)]
+                                        [TIMETABLE-JSEXPR (group-timetable-as-jsexpr "" GROUP-TIMETABLE)])
+                                     TIMETABLE-JSEXPR))])
+      (add db-info
+           (jsexpr->string (make-immutable-hasheq `((linkTitle . ,link-title)
+                                                    (data . ,TABLES))))
+           (string-append (database-teachers-timetable-path db-info) "/"
+                          (teacher-hash TEACHER) "/"
+                          khash "/")
+           token))))
 
 ;; add-all-groups-timetables: jsexpr? string? string? string? (listof group-timetable?) -> jsexpr?
 ;; Add timetables for all groups.
 (define (add-all-groups-timetables db-info link-title khash token timetables)
-  (for ([table timetables])
-    (let* ([TITLE          (group-timetable-title table)]
-           [GROUP-ID       (car (regexp-match (pregexp GROUPS-REGEX) TITLE))]
+  (for ([TABLE timetables])
+    (let* ([TITLE          (group-timetable-title TABLE)]
+           [GROUP-ID       (select-group-from-title TITLE)]
            [TIMETABLE-JSON (jsexpr->string
-                            (group-timetable-as-jsexpr link-title table))])
+                            (group-timetable-as-jsexpr link-title TABLE))])
       (add db-info
            TIMETABLE-JSON
            (string-append (database-timetable-path db-info) "/" GROUP-ID "/" khash)
@@ -58,6 +92,16 @@
 (define (add-hash db-info khash vhash token)
   (define HASHES-PATH (database-hashes-path db-info))
   (add db-info (jsexpr->string vhash) (string-append HASHES-PATH "/" khash) token))
+
+;; get-names: jsexpr? string? -> (listof teacher?)
+;; Get teachers names.
+(define (get-names config token)
+  (define NAMES/LIST (get database-teachers-names-path config token))
+  (if (eq? NAMES/LIST 'null)
+      null
+      (for/list
+          ([ENTRY (hash->list NAMES/LIST)])
+        (teacher (symbol->string (car ENTRY)) (cdr ENTRY)))))
 
 ;; get-hashes: jsexpr? string? -> jsexpr?
 ;; Get hashes from the DB.

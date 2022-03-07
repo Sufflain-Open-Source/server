@@ -17,16 +17,19 @@
 
 #lang racket/base
 
-(require racket/string
+(require "blog-scraper.rkt"
+         racket/string
          racket/list
-
-         percs
-         "blog-scraper.rkt")
+         percs)
 
 (provide (all-defined-out))
 
+;; teacher:
+;; (teacher string? string?)
+(struct teacher [hash name])
+
 ;; teacher-timetable:
-;; (teacher-timetable string? (listof group-timetable?))
+;; (teacher-timetable teacher? (listof group-timetable?))
 (struct teacher-timetable [teacher group-timetables])
 
 ;; select-all-teachers-timetables: (listof string?) (listof group-timetable?) -> (listof teacher-timetable?)
@@ -36,7 +39,7 @@
             (not (empty? (teacher-timetable-group-timetables item))))
           (for/list
               ([TEACHER teachers])
-            (teacher-timetable TEACHER (select-all-teacher-timetables TEACHER timetables)))))
+            (teacher-timetable TEACHER (select-all-teacher-timetables (teacher-name TEACHER) timetables)))))
 
 ;; select-all-teacher-timetables: string? (listof group-timetable?) -> (listof group-timetable?)
 ;; Selects timetables only with the teacher's name.
