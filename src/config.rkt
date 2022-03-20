@@ -22,12 +22,9 @@
          racket/function
          racket/port)
 
-(provide identity-toolkit
-         identity-toolkit?
-         identity-toolkit-url
-         user
+(provide user
          user?
-         user-email
+         user-name
          user-password
          database
          database?
@@ -36,7 +33,6 @@
          app-props?
          get-app-props
          database-url
-         database-api-key
          database-groups-path
          database-timetable-path
          database-hashes-path
@@ -47,7 +43,6 @@
          college-site?
          college-site-url
          college-site-blog-path
-         get-identity-toolkit
          get-user-credentials
          get-database-info
          get-college-site-info
@@ -61,21 +56,15 @@
 (define CONFIG-PATH
   (string-append CONFIG-DIR-PATH "/sufflain-config.json"))
 
-;; identity-toolkit is a structure.
-;; It contains Google's Identity Toolkit url.
-;; (identity-toolkit string?)
-(struct identity-toolkit [url])
-
 ;; user is a structure.
-;; It contatins user's email and password that are used for authentication.
+;; It contatins user's name and password that are used for authentication.
 ;; (user string? string?)
-(struct user [email password])
+(struct user [name password])
 
 ;; database is a structure.
 ;; It contains a URL of the database and an API key.
 ;; (database string? string? string? string? string? string? string? string?)
 (struct database [url
-                  api-key
                   groups-path
                   timetable-path
                   hashes-path
@@ -101,22 +90,14 @@
        [APP-PROPS-SLEEP-TIME (hash-ref APP-PROPS CONFIG-APP-PROPS-SLEEP-TIME-KEY)])
     (app-props APP-PROPS-SLEEP-TIME)))
 
-;; get-identity-toolit: jsexpr? -> identity-toolkit?
-;; Read identity toolkit info from the config file.
-(define (get-identity-toolkit config)
-  (let*
-      ([IDENTITY-TOOLKIT     (hash-ref config           CONFIG-IDENTITY-TOOLKIT-KEY)]
-       [IDENTITY-TOOLKIT-URL (hash-ref IDENTITY-TOOLKIT CONFIG-IDENTITY-TOOLKIT-URL-KEY)])
-    (identity-toolkit IDENTITY-TOOLKIT-URL)))
-
 ;; get-user-credentials: jsexpr? -> user?
 ;; Read user credentials from the config file.
 (define (get-user-credentials config)
   (let*
       ([USER     (hash-ref config CONFIG-USER-KEY)]
-       [EMAIL    (hash-ref USER   CONFIG-USER-EMAIL-KEY)]
+       [NAME     (hash-ref USER   CONFIG-USER-NAME-KEY)]
        [PASSWORD (hash-ref USER   CONFIG-USER-PASSWORD-KEY)])
-    (user EMAIL PASSWORD)))
+    (user NAME PASSWORD)))
 
 ;; get-database-info: jsexpr? -> database?
 ;; Read necessary info about the database from the config file.
@@ -124,14 +105,13 @@
   (let*
       ([DATABASE                (hash-ref config   CONFIG-DATABASE-KEY)]
        [URL                     (hash-ref DATABASE CONFIG-DATABASE-URL-KEY)]
-       [API-KEY                 (hash-ref DATABASE CONFIG-DATABASE-API-KEY)]
        [GROUPS-PATH             (hash-ref DATABASE CONFIG-DATABASE-GROUPS-PATH-KEY)]
        [TIMETABLE-PATH          (hash-ref DATABASE CONFIG-DATABASE-TIMETABLE-PATH-KEY)]
        [HASHES-PATH             (hash-ref DATABASE CONFIG-DATABASE-HASHES-PATH-KEY)]
        [ORDER-PATH              (hash-ref DATABASE CONFIG-DATABASE-ORDER-PATH-KEY)]
        [NAMES-PATH              (hash-ref DATABASE CONFIG-DATABASE-NAMES-PATH-KEY)]
        [TEACHERS-TIMETABLE-PATH (hash-ref DATABASE CONFIG-DATABASE-TEACHERS-TIMETABLE-PATH-KEY)])
-    (database URL API-KEY GROUPS-PATH TIMETABLE-PATH HASHES-PATH ORDER-PATH NAMES-PATH TEACHERS-TIMETABLE-PATH)))
+    (database URL GROUPS-PATH TIMETABLE-PATH HASHES-PATH ORDER-PATH NAMES-PATH TEACHERS-TIMETABLE-PATH)))
 
 ;; get-college-site-info: jsexpr? -> college-site?
 ;; Read college site info from the config site.
@@ -174,7 +154,6 @@
   (define STRING-PORT-MOCK              (mock #:behavior (const EXAMPLE-JSEXPR/STRING)))
   (define EXAMPLE-CONFIG (GET-CONFIG-MOCK))
 
-  (check-pred identity-toolkit? (get-identity-toolkit EXAMPLE-CONFIG))
   (check-pred user?             (get-user-credentials EXAMPLE-CONFIG))
   (check-pred database?         (get-database-info EXAMPLE-CONFIG))
   (check-pred college-site?     (get-college-site-info EXAMPLE-CONFIG))

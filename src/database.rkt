@@ -22,117 +22,254 @@
          "requests.rkt"
          "teachers-timetable-builder.rkt"
          "util.rkt"
+         "auth.rkt"
          json
-         openssl/md5)
+         openssl/md5
+         racket/hash)
 
-(provide add-all-teachers-timetables
-         add-all-groups-timetables
-         add-hash
-         get-hashes
-         get-groups
-         get-names
-         add-groups
-         add-names
-         add)
+(provide (all-defined-out))
 
-;; add-names: (listof string?) string? jsexpr? -> jsexpr?
+;; remove-redundant: (listof hashes) group-list (listof teacher?) jsexpr? -> void?
+;; Remove redundant timetables for each group.
+(define (remove-redundant hashes groups teachers config)
+  (let ([DB-HASHES (get-hashes config)]
+        [DB-INFO   (get-database-info config)])
+    (unless (hash-empty? DB-HASHES)
+      (if (hash-empty? hashes)
+          ((lambda ()
+             (hash-for-each DB-HASHES
+                            (lambda (key val)
+                              (delete-timetables groups teachers key DB-INFO config)))
+             (delete-all-hash-pairs DB-INFO config)))
+          (hash-for-each DB-HASHES
+                         (lambda (key val)
+                           (unless (hash-has-key? hashes key)
+                             (delete-timetables groups teachers key DB-INFO config)
+                             (delete-hash-pair key DB-INFO config)
+                             (remove-post-order DB-INFO key config))))))))
+
+;; remove-post-order: jsexpr? symbol? jsexpr? -> jsexpr?
+;; Remove the blog post order from the database.
+(define (remove-post-order db-info khash config)
+  (let*
+      ([ORDERS-PATH     (database-order-path db-info)]
+       [ORDERS          (get/safe database-order-path config)])
+    (add db-info
+         (jsexpr->string (hash-remove ORDERS khash))
+         ORDERS-PATH
+         config)))
+
+;; add-post-order: jsexpr? symbol? number? jsexpr? -> jsexpr?
+;; Add a number that represents a post order on the blog page.
+(define (add-post-order db-info khash order config)
+  (let*
+      ([ORDERS-PATH     (database-order-path db-info)]
+       [ORDERS          (get/safe database-order-path config)])
+    (add db-info
+         (jsexpr->string (hash-set ORDERS khash order))
+         ORDERS-PATH
+         config)))
+
+;; delete-timetables: group-list (listof teacher?) string? jsexpr? -> void?
+;; Locate a timetable by khash and delete for each group.
+(define (delete-timetables groups teachers khash db config)
+  (let*
+      ([URL                     (database-url db)]
+       [TIMETABLE-PATH          (database-timetable-path db)]
+       [TEACHERS-TIMETABLE-PATH (database-teachers-timetable-path db)])
+    (for ([GROUP groups])
+      (let*
+          ([ALL-TIMETABLES          (get/safe database-timetable-path config)]
+           [GROUP-TIMETABLES        (hash-ref ALL-TIMETABLES (string->symbol GROUP) #hasheq())]
+           [WITHOUT-SELECTED        (hash-remove GROUP-TIMETABLES (string->symbol khash))])
+        (add db
+             (jsexpr->string (hash-set ALL-TIMETABLES
+                                       (string->symbol GROUP)
+                                       WITHOUT-SELECTED))
+             TIMETABLE-PATH
+             config)))
+    (for ([TEACHER teachers])
+      (let*
+          ([ALL-TEACHERS-TIMETABLES (get/safe database-teachers-timetable-path config)]
+           [TEACHER-TIMETABLES      (hash-ref ALL-TEACHERS-TIMETABLES (string->symbol (teacher-hash TEACHER)) #hasheq())]
+           [WITHOUT-SELECTED        (hash-remove TEACHER-TIMETABLES (string->symbol khash))])
+        (add db
+             (jsexpr->string (hash-set ALL-TEACHERS-TIMETABLES
+                                       (string->symbol (teacher-hash TEACHER))
+                                       WITHOUT-SELECTED))
+             TEACHERS-TIMETABLE-PATH
+             config)))))
+
+;; delete-all-hash-pairs: jsexpr jsexpr -> jsexpr?
+;; Delete all hash pairs from the DB.
+(define (delete-all-hash-pairs db config)
+  (let*
+      ([URL         (database-url db)]
+       [HASHES-PATH (database-hashes-path db)]
+       [HASHES-REV  (get-doc-rev database-hashes-path config)])
+    (add db
+         (set-rev-if-needed (jsexpr->string #hasheq()) HASHES-REV)
+         HASHES-PATH
+         config)))
+
+;; delete-hash-pair: symbol? jsexpr? jsexpr? -> jsexpr?
+;; Locate a pair of hashes by khash and delete it.
+(define (delete-hash-pair khash db config)
+  (let*
+      ([HASHES-PATH (database-hashes-path db)]
+       [HASHES      (get/safe database-hashes-path config)])
+    (add db
+         (jsexpr->string (hash-remove HASHES khash))
+         HASHES-PATH
+         config)))
+
+;; add-names: (listof string?) jsexpr? -> jsexpr?
 ;; Add teachers' names.
-(define (add-names names auth-token config)
+(define (add-names names config)
   (let*
       ([DB           (get-database-info config)]
        [NAMES-PATH   (database-teachers-names-path DB)]
        [NAMES-HASHES (for/list
                          ([NAME names])
                        `(,(string->symbol (md5 (open-input-string NAME))) . ,NAME))]
-       [NAMES/JSON   (jsexpr->string (make-immutable-hasheq NAMES-HASHES))])
-    (add DB NAMES/JSON NAMES-PATH auth-token)))
+       [NAMES/JSON   (jsexpr->string (make-immutable-hasheq
+                                      (list
+                                       (cons
+                                        'data (make-immutable-hasheq NAMES-HASHES)))))]
+       [NAMES-REV    (get-doc-rev database-teachers-names-path config)])
+    (add DB
+         (set-rev-if-needed NAMES/JSON NAMES-REV)
+         NAMES-PATH
+         config)))
 
-;; add-all-teachers-timetables: jsexpr? string? string? string? (listof teacher-timetable?) -> jsepxr?
+;; add-all-teachers-timetables: jsexpr? string? string? (listof teacher-timetable?) jsexpr? -> jsepxr?
 ;; Add timetables for all teachers.
-(define (add-all-teachers-timetables db-info link-title khash token timetables)
+(define (add-all-teachers-timetables db-info link-title khash timetables config)
   (for ([TABLE timetables])
-    (let* ([TEACHER              (teacher-timetable-teacher TABLE)]
-           [TIMETABLES           (teacher-timetable-group-timetables TABLE)]
-           [NUMBER-OF-TIMETABLES (length TIMETABLES)]
-           [TABLES               (for/list ([GROUP-TIMETABLE TIMETABLES]
-                                            [i               NUMBER-OF-TIMETABLES])
-                                   (let*
-                                       ([TITLE            (group-timetable-title GROUP-TIMETABLE)]
-                                        [GROUP-ID         (select-group-from-title TITLE)]
-                                        [TIMETABLE-JSEXPR (group-timetable-as-jsexpr "" GROUP-TIMETABLE)])
-                                     TIMETABLE-JSEXPR))])
+    (let* ([TEACHER                (teacher-timetable-teacher TABLE)]
+           [TIMETABLES             (teacher-timetable-group-timetables TABLE)]
+           [NUMBER-OF-TIMETABLES   (length TIMETABLES)]
+           [TABLES                 (for/list ([GROUP-TIMETABLE TIMETABLES]
+                                              [i               NUMBER-OF-TIMETABLES])
+                                     (group-timetable-as-jsexpr "" GROUP-TIMETABLE))]
+           [ALL-TIMETABLES         (get/safe database-teachers-timetable-path config)]
+           [ALL-TEACHER-TIMETABLES (hash-ref ALL-TIMETABLES (string->symbol (teacher-hash TEACHER)) #hasheq())]
+           [TEACHER-TIMETABLES     (make-immutable-hasheq
+                                    `((linkTitle . ,link-title)
+                                      (data      . ,TABLES)))])
       (add db-info
-           (jsexpr->string (make-immutable-hasheq `((linkTitle . ,link-title)
-                                                    (data . ,TABLES))))
-           (string-append (database-teachers-timetable-path db-info) "/"
-                          (teacher-hash TEACHER) "/"
-                          khash "/")
-           token))))
+           (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol (teacher-hash TEACHER))
+                                     (hash-union (make-immutable-hasheq (list (cons (string->symbol khash)
+                                                                                    TEACHER-TIMETABLES)))
+                                                 ALL-TEACHER-TIMETABLES
+                                                 #:combine (lambda (new exs) new))))
+           (database-teachers-timetable-path db-info)
+           config))))
 
-;; add-all-groups-timetables: jsexpr? string? string? string? (listof group-timetable?) -> jsexpr?
+;; add-all-groups-timetables: jsexpr? string? string? (listof group-timetable?) jsexpr? -> jsexpr?
 ;; Add timetables for all groups.
-(define (add-all-groups-timetables db-info link-title khash token timetables)
+(define (add-all-groups-timetables db-info link-title khash timetables config)
   (for ([TABLE timetables])
-    (let* ([TITLE          (group-timetable-title TABLE)]
-           [GROUP-ID       (select-group-from-title TITLE)]
-           [TIMETABLE-JSON (jsexpr->string
-                            (group-timetable-as-jsexpr link-title TABLE))])
+    (let* ([TITLE            (group-timetable-title TABLE)]
+           [GROUP-ID         (select-group-from-title TITLE)]
+           [TIMETABLE-JSEXPR (make-immutable-hasheq (list (cons (string->symbol khash)
+                                                                (group-timetable-as-jsexpr link-title TABLE))))]
+           [ALL-TIMETABLES   (get/safe database-timetable-path config)]
+           [GROUP-TIMETABLES (hash-ref ALL-TIMETABLES (string->symbol GROUP-ID) #hasheq())])
       (add db-info
-           TIMETABLE-JSON
-           (string-append (database-timetable-path db-info) "/" GROUP-ID "/" khash)
-           token))))
+           (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol GROUP-ID)
+                                     (hash-union TIMETABLE-JSEXPR
+                                                 GROUP-TIMETABLES
+                                                 #:combine (lambda (new exs) new)))) ; Replace existing with new.
+           (database-timetable-path db-info)
+           config))))
 
-;; add-hash: jsexpr? string? string? string? -> jsexpr?
+;; add-hash: jsexpr? string? string? jsexpr? -> jsexpr?
 ;; Add a pair of hashes to the DB.
-(define (add-hash db-info khash vhash token)
-  (define HASHES-PATH (database-hashes-path db-info))
-  (add db-info (jsexpr->string vhash) (string-append HASHES-PATH "/" khash) token))
+(define (add-hash db-info khash vhash config)
+  (let*
+      ([HASHES-PATH (database-hashes-path db-info)]
+       [HASHES      (get-hashes config)])
+    (add db-info (jsexpr->string (hash-set HASHES (string->symbol khash) vhash)) HASHES-PATH config)))
 
-;; get-names: jsexpr? string? -> (listof teacher?)
+;; get-names: jsexpr? -> (listof teacher?)
 ;; Get teachers names.
-(define (get-names config token)
-  (define NAMES/LIST (get database-teachers-names-path config token))
-  (if (eq? NAMES/LIST 'null)
-      null
+(define (get-names config)
+  (define NAMES (hash-ref (get/safe database-teachers-names-path config) 'data null))
+  (if (hash? NAMES)
       (for/list
-          ([ENTRY (hash->list NAMES/LIST)])
-        (teacher (symbol->string (car ENTRY)) (cdr ENTRY)))))
+          ([ENTRY (hash->list NAMES)])
+        (teacher (symbol->string (car ENTRY)) (cdr ENTRY)))
+      NAMES))
 
-;; get-hashes: jsexpr? string? -> jsexpr?
+;; get-hashes: jsexpr? -> jsexpr?
 ;; Get hashes from the DB.
-(define (get-hashes config token)
-  (get database-hashes-path config token))
+(define (get-hashes config)
+  (hash-remove (hash-remove (get/safe database-hashes-path config) '_rev) '_id))
 
-;; get-groups: jsexpr? string? -> (listof string?)
+;; get-groups: jsexpr? -> (listof string?)
 ;; Get groups from the DB.
-(define (get-groups config token)
-  (get database-groups-path config token))
+(define (get-groups config)
+  (hash-ref (get/safe database-groups-path config)
+            'data
+            null))
 
-;; add-groups: string? string? jsexpr? -> string?
+;; add-groups: string? jsexpr? -> string?
 ;; Add groups to the database. If they are already present, replace them.
-(define (add-groups groups auth-token config)
+(define (add-groups groups config)
   (let*
       ([DB          (get-database-info config)]
-       [GROUPS-PATH (database-groups-path DB)])
-    (add DB groups GROUPS-PATH auth-token)))
+       [GROUPS-PATH (database-groups-path DB)]
+       [GROUPS-REV  (get-doc-rev database-groups-path config)])
+    (add DB
+         (set-rev-if-needed groups GROUPS-REV)
+         GROUPS-PATH config)))
 
-;; get: procedure? jsexpr? string? -> any/c
-(define (get get-db-path-proc config token)
+;; set-rev-if-needed: string? string?
+;; Set _rev if an update is necessary.
+(define (set-rev-if-needed json rev)
+  (if (>= (string-length rev) 1)
+      (jsexpr->string (hash-set (string->jsexpr json) '_rev rev))
+      json))
+
+;; get/safe: procedure? jsexpr? -> any/c
+;; Returns an empty list if there is an error.
+(define (get/safe get-db-path-proc config)
+  (define RESULT (get get-db-path-proc config))
+  (if (has-error? RESULT)
+      #hasheq()
+      RESULT))
+
+;; get-doc-rev: procedure? jsexpr? -> string?
+;; Get document revision.
+(define (get-doc-rev get-db-path-proc config)
+  (define DOC (get/safe get-db-path-proc config))
+  (define REV-KEY '_rev)
+  (if (hash-has-key? DOC REV-KEY)
+      (hash-ref DOC REV-KEY)
+      ""))
+
+;; get: procedure? jsexpr? -> any/c
+(define (get get-db-path-proc config)
   (let*
       ([DB          (get-database-info config)]
        [DB-URL      (database-url DB)]
        [PATH        (get-db-path-proc DB)]
-       [REQUEST-URL (string-append DB-URL PATH ".json" "?auth=" token)])
-    (http-get REQUEST-URL)))
+       [REQUEST-URL (string-append DB-URL PATH)])
+    (http-get REQUEST-URL #:header (make-auth-header config))))
 
-;; add: database? string? string? string? -> jsepxr?
-(define (add db-info payload path auth-token
-             #:get-database-info-mock [get-database-info     get-database-info]
+;; add: database? string? string? -> jsepxr?
+(define (add db-info payload path config
              #:with-json-payload-mock [with-json-payload/put with-json-payload/put])
   (let*
       ([DB-URL      (database-url db-info)]
-       [REQUEST-URL (string-append DB-URL path ".json" "?auth=" auth-token)])
-    (with-json-payload/put REQUEST-URL payload)))
+       [REQUEST-URL (string-append DB-URL path)])
+    (with-json-payload/put REQUEST-URL payload #:header (make-auth-header config))))
+
+;; has-error?: hash? -> boolean?
+;; Returns true if the hash contains an 'error key.
+(define (has-error? hash)
+  (hash-has-key? hash 'error))
 
 (module+ test
   (require "shared/mocks.rkt"
@@ -146,6 +283,6 @@
   (define WITH-JSON-PAYLOAD-MOCK (mock
                                   #:behavior (const "[\"СА21-19\"]")))
 
-  (check-equal? (add (GET-DATABASE-INFO-MOCK) "[\"СА21-19\"]" "" ""
-                     #:get-database-info-mock GET-DATABASE-INFO-MOCK
+  (check-equal? (add (GET-DATABASE-INFO-MOCK) "[\"СА21-19\"]" ""
+                     (GET-CONFIG-MOCK)
                      #:with-json-payload-mock WITH-JSON-PAYLOAD-MOCK) "[\"СА21-19\"]"))

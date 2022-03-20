@@ -19,16 +19,12 @@
 
 (provide (all-defined-out))
 
-(define CONFIG-IDENTITY-TOOLKIT-KEY     'identityToolkit)
-(define CONFIG-IDENTITY-TOOLKIT-URL-KEY 'url)
-
 (define CONFIG-USER-KEY          'user)
-(define CONFIG-USER-EMAIL-KEY    'email)
+(define CONFIG-USER-NAME-KEY     'name)
 (define CONFIG-USER-PASSWORD-KEY 'password)
 
 (define CONFIG-DATABASE-KEY                         'database)
 (define CONFIG-DATABASE-URL-KEY                     'url)
-(define CONFIG-DATABASE-API-KEY                     'apiKey)
 (define CONFIG-DATABASE-GROUPS-PATH-KEY             'groupsPath)
 (define CONFIG-DATABASE-TIMETABLE-PATH-KEY          'timetablePath)
 (define CONFIG-DATABASE-HASHES-PATH-KEY             'hashesPath)

@@ -20,22 +20,17 @@
 (require "groups.rkt"
          "config.rkt"
          "database.rkt"
-         "auth.rkt"
          "tracker.rkt"
          "scraper.rkt"
          "teachers-names-loader.rkt"
          racket/cmdline
          dyoo-while-loop)
 
-(define (get-firebase-token)
-  (get-token (user-email USER) (user-password USER) CONFIG))
-
 (define CONFIG   (get-config))
 (define USER     (get-user-credentials CONFIG))
 (define DB       (get-database-info CONFIG))
-(define TOKEN    (get-firebase-token))
-(define GROUPS   (get-groups CONFIG TOKEN))
-(define TEACHERS (get-names CONFIG TOKEN))
+(define GROUPS   (get-groups CONFIG))
+(define TEACHERS (get-names CONFIG))
 
 (define TRACKING-ITERATION-MSG-FIRST-PART "<<<---Tracking iteration [")
 (define TRACKING-ITERATION-MSG-LAST-PART "]--->>>")
@@ -64,18 +59,16 @@
        [SITE-URL     (college-site-url COLLEGE-SITE)]
        [BLOG-PATH    (college-site-blog-path COLLEGE-SITE)]
        [FULL-URL     (string-append SITE-URL BLOG-PATH)]
-       [BLOG-PAGE    (get-page FULL-URL)]
-       [TOKEN        (get-firebase-token)])
-    (track BLOG-PAGE GROUPS TEACHERS config TOKEN)))
+       [BLOG-PAGE    (get-page FULL-URL)])
+    (track BLOG-PAGE GROUPS TEACHERS config)))
 
 ;; read-names-and-add-to-db: string? jsexpr?
 ;; Read names from a file and upload to the DB.
 (define (read-names-and-add-to-db file-path config)
   (let
-      ([NAMES (read-names file-path)]
-       [TOKEN (get-firebase-token)])
+      ([NAMES (read-names file-path)])
     (displayln
-     (add-names NAMES TOKEN config))))
+     (add-names NAMES config))))
 
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
@@ -83,7 +76,7 @@
   (let
       ([GROUPS (extract-groups-from-page url-str)])
     (displayln
-     (add-groups (group-list-to-json GROUPS) TOKEN config))))
+     (add-groups (group-list-to-json GROUPS) config))))
 
 (command-line #:program "sfl"
               #:once-any

@@ -875,27 +875,25 @@
 (define (get-groups-mock/list . args)
   '("СА21-19"))
 
-(define GET-CONFIG-MOCK 
-  (mock #:behavior 
+(define GET-CONFIG-MOCK
+  (mock #:behavior
         (const
-         (make-immutable-hasheq 
+         (make-immutable-hasheq
           `((,CONFIG-APP-PROPS-KEY
              .
              ,(make-immutable-hasheq `((,CONFIG-APP-PROPS-SLEEP-TIME-KEY . 1800))))
-            (,CONFIG-IDENTITY-TOOLKIT-KEY
-             .
-             ,(make-immutable-hasheq `((,CONFIG-IDENTITY-TOOLKIT-URL-KEY . "https://identity.url"))))
             (,CONFIG-DATABASE-KEY
              .
-             ,(make-immutable-hasheq `((,CONFIG-DATABASE-URL-KEY            . "https://ourdb.app")
-                                       (,CONFIG-DATABASE-API-KEY            . "uioy568y7")
-                                       (,CONFIG-DATABASE-GROUPS-PATH-KEY    . "/g")
-                                       (,CONFIG-DATABASE-TIMETABLE-PATH-KEY . "/t")
-                                       (,CONFIG-DATABASE-HASHES-PATH-KEY    . "/h")
-                                       (,CONFIG-DATABASE-ORDER-PATH-KEY     . "/o"))))
+             ,(make-immutable-hasheq `((,CONFIG-DATABASE-URL-KEY                     . "https://ourdb.app")
+                                       (,CONFIG-DATABASE-TEACHERS-TIMETABLE-PATH-KEY . "/e")
+                                       (,CONFIG-DATABASE-GROUPS-PATH-KEY             . "/g")
+                                       (,CONFIG-DATABASE-TIMETABLE-PATH-KEY          . "/t")
+                                       (,CONFIG-DATABASE-HASHES-PATH-KEY             . "/h")
+                                       (,CONFIG-DATABASE-ORDER-PATH-KEY              . "/o")
+                                       (,CONFIG-DATABASE-NAMES-PATH-KEY              . "/n"))))
             (,CONFIG-USER-KEY
              .
-             ,(make-immutable-hasheq `((,CONFIG-USER-EMAIL-KEY    . "bruhmail@yeah.lol")
+             ,(make-immutable-hasheq `((,CONFIG-USER-NAME-KEY     . "bruhmail@yeah.lol")
                                        (,CONFIG-USER-PASSWORD-KEY . "8543873487"))))
             (,CONFIG-COLLEGE-SITE-KEY
              .

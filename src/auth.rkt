@@ -18,58 +18,21 @@
 #lang racket/base
 
 (require "config.rkt"
-         "requests.rkt"
-         racket/function
-         json)
+         net/base64)
 
-(provide get-token)
+(provide make-auth-header)
 
-;; get-token: string? string? jsexpr? -> string?
-;; Get a sign in token for the database.
-(define (get-token email password config
-                   #:db-info-mock [get-database-info get-database-info]
-                   #:identity-toolkit-mock [get-identity-toolkit get-identity-toolkit]
-                   #:json-post-mock [with-json-payload/post with-json-payload/post])
-  (let* ([API-KEY  (database-api-key (get-database-info config))]
-         [URL-STR  (string-append (identity-toolkit-url (get-identity-toolkit config)) API-KEY)]
-         [PAYLOAD  (construct-sign-in-payload email password)]
-         [RESPONSE (with-json-payload/post URL-STR PAYLOAD)])
-    (hash-ref RESPONSE 'idToken)))
-
-;; construct-sign-in-payload: string? string? -> string?
-;; Create a JSON string for auth requests.
-(define (construct-sign-in-payload email password)
-  (define JSON-PAYLOAD
-    (make-immutable-hasheq `((email             . ,email)
-                             (password          . ,password)
-                             (returnSecureToken . #t))))
-  (jsexpr->string JSON-PAYLOAD))
-
-(module+ test
-  (require "shared/mocks.rkt"
-           rackunit
-           mock)
-  
-  (define EXAMPLE-TOKEN "fbcpent64")
-  (define EXAMPLE-AUTH-RESPONSE
-    (string->jsexpr
-     (string-append "{\"idToken\": \"" EXAMPLE-TOKEN "\"}")))
-  
-  (define POST-RESPONSE-MOCK
-    (mock #:behavior (const EXAMPLE-AUTH-RESPONSE)))
-  (define DB-INFO-MOCK
-    (mock #:behavior (const (database "" "k3y" "" "" "" ""))))
-  (define IDENTITY-TOOLKIT-MOCK
-    (mock #:behavior (const (identity-toolkit "url"))))
-  
-  (check-equal? EXAMPLE-TOKEN
-                (get-token "testmail@example.xd"
-                           "1234509876"
-                           (GET-CONFIG-MOCK)
-                           #:db-info-mock DB-INFO-MOCK
-                           #:identity-toolkit-mock IDENTITY-TOOLKIT-MOCK
-                           #:json-post-mock POST-RESPONSE-MOCK))
-  
-  (check-equal? 
-   (construct-sign-in-payload "testmail@example.xd" "1234509876")
-   "{\"email\":\"testmail@example.xd\",\"password\":\"1234509876\",\"returnSecureToken\":true}"))
+;; make-auth-header jsexpr? -> string?
+;; Creates an HTTP header to authenticate in CouchDB.
+(define (make-auth-header config)
+  (let*
+      ([USER          (get-user-credentials config)]
+       [USER-NAME     (user-name USER)]
+       [USER-PASSWORD (user-password USER)])
+    (string-append "Authorization: Basic "
+                   (bytes->string/utf-8
+                    (base64-encode
+                     (string->bytes/utf-8 (string-append USER-NAME
+                                                         ":"
+                                                         USER-PASSWORD))
+                     #""))))) ;; This removes a newline at the end of the Base64-encoded string.
