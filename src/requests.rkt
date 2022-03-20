@@ -33,23 +33,23 @@
                  (number->string RECONNECT-SLEEP-SECONDS)
                  " seconds..."))
 
-;; http-delete: string? -> jsexpr?
+;; http-delete: string? [string?] [procedure?] -> jsexpr?
 (define (http-delete url-str #:header [header ""] [request-pure-port delete-pure-port])
   (http-request url-str delete-pure-port #:header header))
 
-;; get: string? -> jsexpr?
+;; get: string? [string?] [procedure?] -> jsexpr?
 (define (http-get url-str #:header [header ""] [request-pure-port get-pure-port])
   (http-request url-str request-pure-port #:header header))
 
-;; with-json-payload/post: string? string? -> jsexpr?
+;; with-json-payload/post: string? string? [string?] [procedure?] -> jsexpr?
 (define (with-json-payload/post url-str json-str #:header [header ""] [request-pure-port post-pure-port])
   (http-request url-str #:json-payload json-str request-pure-port #:header header))
 
-;; with-json-payload/put string? string? -> jsexpr?
+;; with-json-payload/put string? string? [string?] [procedure?] -> jsexpr?
 (define (with-json-payload/put url-str json-str #:header [header ""] [request-pure-port put-pure-port])
   (http-request url-str #:json-payload json-str request-pure-port #:header header))
 
-;; with-json-payload: string? -> jsexpr?
+;; with-json-payload: string? [string?] [jsexpr?] procedure? -> jsexpr?
 ;; Perform an HTTP request with/without JSON payload.
 (define (http-request url-str #:header [header ""] #:json-payload [json-str null] request-pure-port)
   (let* ([URL                  (string->url url-str)]

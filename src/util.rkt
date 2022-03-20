@@ -21,5 +21,6 @@
 
 (provide (all-defined-out))
 
+;; select-group-from-title: string? -> string?
 (define (select-group-from-title title)
   (car (regexp-match (pregexp GROUPS-REGEX) title)))

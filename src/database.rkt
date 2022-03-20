@@ -70,7 +70,7 @@
          ORDERS-PATH
          config)))
 
-;; delete-timetables: group-list (listof teacher?) string? jsexpr? -> void?
+;; delete-timetables: group-list (listof teacher?) string? jsexpr? jsexpr? -> void?
 ;; Locate a timetable by khash and delete for each group.
 (define (delete-timetables groups teachers khash db config)
   (let*
@@ -258,7 +258,7 @@
        [REQUEST-URL (string-append DB-URL PATH)])
     (http-get REQUEST-URL #:header (make-auth-header config))))
 
-;; add: database? string? string? -> jsepxr?
+;; add: database? string? string? jsexpr? -> jsepxr?
 (define (add db-info payload path config
              #:with-json-payload-mock [with-json-payload/put with-json-payload/put])
   (let*
