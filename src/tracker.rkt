@@ -53,6 +53,7 @@
                                  [HASHES         (cons BLOG-POST-HASH TBODYS-HASH)])
                               (post bpost TBODYS HASHES))) BLOG-POSTS)]
        [POSTS-HASHES (make-immutable-hasheq (map post-hashes POSTS))])
+    (display (string-append "\nTRACKING " (number->string (length BLOG-POSTS)) " POSTS ..."))
     (for ([POST POSTS])
       (add-post-order (get-database-info config)
                       (car (post-hashes POST)) (blog-post-order (post-blogpt POST))
@@ -87,6 +88,7 @@
                             #t
                             #f)
                         #f)
+              (display (string-append "\nPOST [" BPOST-TITLE "] ..."))
               (add-hash DB-INFO (symbol->string POST-KHASH) POST-VHASH config)
               (add-or-update-data add-all-groups-timetables
                                   DB-INFO BPOST-TITLE POST-KHASH POST-VHASH TIMETABLES config)

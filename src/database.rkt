@@ -99,9 +99,13 @@
                                                                                           (teacher-hash target)))
                                                            WITHOUT-SELECTED-ENTRY)
                                                  (GET-PATH-PROC db))))])
+    (display "\nDELETING TIMETABLES ...\n")
     (for ([GROUP groups])
+      (display (string-append "FOR GROUP: [" GROUP "] ...\r"))
       (add-table-for GROUP))
+    (display "\n")
     (for ([TEACHER teachers])
+      (display (string-append "FOR TEACHER: [" (teacher-name TEACHER) "] ...\r"))
       (add-table-for TEACHER))))
 
 ;; delete-all-hash-pairs: jsexpr jsexpr -> jsexpr?
@@ -111,6 +115,7 @@
       ([URL         (database-url db)]
        [HASHES-PATH (database-hashes-path db)]
        [HASHES-REV  (get-doc-rev database-hashes-path config)])
+    (display "\nDELETING ALL HASH PAIRS ...")
     (add db
          (set-rev-if-needed (jsexpr->string #hasheq()) HASHES-REV)
          HASHES-PATH
@@ -122,6 +127,7 @@
   (let*
       ([HASHES-PATH (database-hashes-path db)]
        [HASHES      (get/safe database-hashes-path config)])
+    (display (string-append "\nDELETING HASH PAIR: " (symbol->string khash) " ..."))
     (add db
          (jsexpr->string (hash-remove HASHES khash))
          HASHES-PATH
@@ -141,6 +147,7 @@
                                        (cons
                                         'data (make-immutable-hasheq NAMES-HASHES)))))]
        [NAMES-REV    (get-doc-rev database-teachers-names-path config)])
+    (display (string-append "\nADDING NAMES (" (length names) ") ..."))
     (add DB
          (set-rev-if-needed NAMES/JSON NAMES-REV)
          NAMES-PATH
@@ -149,6 +156,7 @@
 ;; add-all-teachers-timetables: jsexpr? string? string? (listof teacher-timetable?) jsexpr? -> jsepxr?
 ;; Add timetables for all teachers.
 (define (add-all-teachers-timetables db-info link-title khash timetables config)
+  (display "\nADDING TEACHERS TIMETABLES ...\n")
   (for ([TABLE timetables])
     (let* ([TEACHER                (teacher-timetable-teacher TABLE)]
            [TIMETABLES             (teacher-timetable-group-timetables TABLE)]
@@ -161,6 +169,7 @@
            [TEACHER-TIMETABLES     (make-immutable-hasheq
                                     `((linkTitle . ,link-title)
                                       (data      . ,TABLES)))])
+      (display (string-append "FOR TEACHER: [" (teacher-name TEACHER) "] ...\r"))
       (add db-info
            (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol (teacher-hash TEACHER))
                                      ;; We need to use hash-union/safe to avoid a confilct
@@ -175,6 +184,7 @@
 ;; add-all-groups-timetables: jsexpr? string? string? (listof group-timetable?) jsexpr? -> jsexpr?
 ;; Add timetables for all groups.
 (define (add-all-groups-timetables db-info link-title khash timetables config)
+  (display "\nADDING TIMETABLES ...\n")
   (for ([TABLE timetables])
     (let* ([TITLE            (group-timetable-title TABLE)]
            [GROUP-ID         (select-group-from-title TITLE)]
@@ -182,6 +192,7 @@
                                                                 (group-timetable-as-jsexpr link-title TABLE))))]
            [ALL-TIMETABLES   (get/safe database-timetable-path config)]
            [GROUP-TIMETABLES (hash-ref ALL-TIMETABLES (string->symbol GROUP-ID) #hasheq())])
+      (display (string-append "FOR GROUP: [" GROUP-ID "] ...\r"))
       (add db-info
            (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol GROUP-ID)
                                      ;; Same as in the add-all-teachers-timetables.
@@ -234,6 +245,7 @@
       ([DB          (get-database-info config)]
        [GROUPS-PATH (database-groups-path DB)]
        [GROUPS-REV  (get-doc-rev database-groups-path config)])
+    (display (string-append "\nADDING GROUPS (" (length groups) ")..."))
     (add DB
          (set-rev-if-needed groups GROUPS-REV)
          GROUPS-PATH config)))
