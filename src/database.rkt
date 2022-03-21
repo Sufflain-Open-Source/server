@@ -74,31 +74,31 @@
 ;; Locate a timetable by khash and delete for each group.
 (define (delete-timetables groups teachers khash db config)
   (let*
-      ([URL                     (database-url db)]
-       [TIMETABLE-PATH          (database-timetable-path db)]
-       [TEACHERS-TIMETABLE-PATH (database-teachers-timetable-path db)])
+      ([URL                        (database-url db)]
+       [TIMETABLE-PATH             (database-timetable-path db)]
+       [TEACHERS-TIMETABLE-PATH    (database-teachers-timetable-path db)]
+       [add-data                   (lambda (jsexpr path)
+                                     (add db (jsexpr->string jsexpr) path config))]
+       [remove-selected-entry-from (lambda (tables)
+                                     (hash-remove tables (string->symbol khash)))]
+       [select-tables-by           (lambda (key from)
+                                     (hash-ref from (string->symbol key) #hasheq()))]
+       [add-table-for              (lambda (target)
+                                     (let*
+                                         ([ALL-TABLES             (get/safe (if (string? target)
+                                                                                database-timetable-path
+                                                                                database-teachers-timetable-path)
+                                                                            config)]
+                                          [TARGET-TABLES          (select-tables-by target ALL-TABLES)]
+                                          [WITHOUT-SELECTED-ENTRY (remove-selected-entry-from TARGET-TABLES)])
+                                       (add-data (hash-set ALL-TABLES (string->symbol (if (string? target)
+                                                                                          target
+                                                                                          (teacher-hash target)))
+                                                           WITHOUT-SELECTED-ENTRY))))])
     (for ([GROUP groups])
-      (let*
-          ([ALL-TIMETABLES          (get/safe database-timetable-path config)]
-           [GROUP-TIMETABLES        (hash-ref ALL-TIMETABLES (string->symbol GROUP) #hasheq())]
-           [WITHOUT-SELECTED        (hash-remove GROUP-TIMETABLES (string->symbol khash))])
-        (add db
-             (jsexpr->string (hash-set ALL-TIMETABLES
-                                       (string->symbol GROUP)
-                                       WITHOUT-SELECTED))
-             TIMETABLE-PATH
-             config)))
+      (add-table-for GROUP))
     (for ([TEACHER teachers])
-      (let*
-          ([ALL-TEACHERS-TIMETABLES (get/safe database-teachers-timetable-path config)]
-           [TEACHER-TIMETABLES      (hash-ref ALL-TEACHERS-TIMETABLES (string->symbol (teacher-hash TEACHER)) #hasheq())]
-           [WITHOUT-SELECTED        (hash-remove TEACHER-TIMETABLES (string->symbol khash))])
-        (add db
-             (jsexpr->string (hash-set ALL-TEACHERS-TIMETABLES
-                                       (string->symbol (teacher-hash TEACHER))
-                                       WITHOUT-SELECTED))
-             TEACHERS-TIMETABLE-PATH
-             config)))))
+      (add-table-for TEACHER))))
 
 ;; delete-all-hash-pairs: jsexpr jsexpr -> jsexpr?
 ;; Delete all hash pairs from the DB.
@@ -159,10 +159,12 @@
                                       (data      . ,TABLES)))])
       (add db-info
            (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol (teacher-hash TEACHER))
-                                     (hash-union (make-immutable-hasheq (list (cons (string->symbol khash)
-                                                                                    TEACHER-TIMETABLES)))
-                                                 ALL-TEACHER-TIMETABLES
-                                                 #:combine (lambda (new exs) new))))
+                                     ;; We need to use hash-union/safe to avoid a confilct
+                                     ;; if both hash tables have entries with the same key.
+                                     ;; Same as in the add-all-groups-timetables.
+                                     (hash-union/safe (make-immutable-hasheq (list (cons (string->symbol khash)
+                                                                                         TEACHER-TIMETABLES)))
+                                                      ALL-TEACHER-TIMETABLES)))
            (database-teachers-timetable-path db-info)
            config))))
 
@@ -178,11 +180,18 @@
            [GROUP-TIMETABLES (hash-ref ALL-TIMETABLES (string->symbol GROUP-ID) #hasheq())])
       (add db-info
            (jsexpr->string (hash-set ALL-TIMETABLES (string->symbol GROUP-ID)
-                                     (hash-union TIMETABLE-JSEXPR
-                                                 GROUP-TIMETABLES
-                                                 #:combine (lambda (new exs) new)))) ; Replace existing with new.
+                                     ;; Same as in the add-all-teachers-timetables.
+                                     (hash-union/safe TIMETABLE-JSEXPR
+                                                      GROUP-TIMETABLES)))
            (database-timetable-path db-info)
            config))))
+
+;; hash-union/safe: hash? hash? -> hash?
+;; Create a hash union. If both hashes contain entries with the same key, the value will be replaced by {pri}'s value.
+(define (hash-union/safe pri sec)
+  (hash-union pri
+              sec
+              #:combine (lambda (new exs) new)))
 
 ;; add-hash: jsexpr? string? string? jsexpr? -> jsexpr?
 ;; Add a pair of hashes to the DB.
