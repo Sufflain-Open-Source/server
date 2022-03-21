@@ -70,7 +70,7 @@
          ORDERS-PATH
          config)))
 
-;; delete-timetables: group-list (listof teacher?) string? jsexpr? jsexpr? -> void?
+;; delete-timetables: group-list (listof teacher?) symbol? jsexpr? jsexpr? -> void?
 ;; Locate a timetable by khash and delete for each group.
 (define (delete-timetables groups teachers khash db config)
   (let*
@@ -80,21 +80,25 @@
        [add-data                   (lambda (jsexpr path)
                                      (add db (jsexpr->string jsexpr) path config))]
        [remove-selected-entry-from (lambda (tables)
-                                     (hash-remove tables (string->symbol khash)))]
+                                     (hash-remove tables khash))]
        [select-tables-by           (lambda (key from)
                                      (hash-ref from (string->symbol key) #hasheq()))]
        [add-table-for              (lambda (target)
                                      (let*
-                                         ([ALL-TABLES             (get/safe (if (string? target)
-                                                                                database-timetable-path
-                                                                                database-teachers-timetable-path)
+                                         ([GET-PATH-PROC          (if (string? target)
+                                                                      database-timetable-path
+                                                                      database-teachers-timetable-path)]
+                                          [ALL-TABLES             (get/safe GET-PATH-PROC
                                                                             config)]
-                                          [TARGET-TABLES          (select-tables-by target ALL-TABLES)]
+                                          [TARGET-TABLES          (select-tables-by (if (string? target)
+                                                                                        target
+                                                                                        (teacher-hash target)) ALL-TABLES)]
                                           [WITHOUT-SELECTED-ENTRY (remove-selected-entry-from TARGET-TABLES)])
                                        (add-data (hash-set ALL-TABLES (string->symbol (if (string? target)
                                                                                           target
                                                                                           (teacher-hash target)))
-                                                           WITHOUT-SELECTED-ENTRY))))])
+                                                           WITHOUT-SELECTED-ENTRY)
+                                                 (GET-PATH-PROC db))))])
     (for ([GROUP groups])
       (add-table-for GROUP))
     (for ([TEACHER teachers])
