@@ -32,7 +32,7 @@
 ;; remove-redundant: (listof hashes) group-list (listof teacher?) jsexpr? -> void?
 ;; Remove redundant timetables for each group.
 (define (remove-redundant hashes groups teachers config)
-  (let ([DB-HASHES (get-hashes config)]
+  (let ([DB-HASHES (remove-internal-fields (get-hashes config))]
         [DB-INFO   (get-database-info config)])
     (unless (hash-empty? DB-HASHES)
       (if (hash-empty? hashes)
@@ -229,7 +229,7 @@
 ;; get-hashes: jsexpr? -> jsexpr?
 ;; Get hashes from the DB.
 (define (get-hashes config)
-  (hash-remove (hash-remove (get/safe database-hashes-path config) '_rev) '_id))
+  (get/safe database-hashes-path config))
 
 ;; get-groups: jsexpr? -> (listof string?)
 ;; Get groups from the DB.

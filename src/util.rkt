@@ -21,6 +21,11 @@
 
 (provide (all-defined-out))
 
+;; remove-internal-fields: hash? -> hash?
+;; Remove internal fields from the hash
+(define (remove-internal-fields hash)
+  (hash-remove (hash-remove hash '_rev) '_id))
+
 ;; select-group-from-title: string? -> string?
 (define (select-group-from-title title)
   (car (regexp-match (pregexp GROUPS-REGEX) title)))
