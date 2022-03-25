@@ -67,16 +67,14 @@
 (define (read-names-and-add-to-db file-path config)
   (let
       ([NAMES (read-names file-path)])
-    (displayln
-     (add-names NAMES config))))
+     (add-names NAMES config)))
 
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
 (define (get-groups-and-add-to-db url-str config)
   (let
       ([GROUPS (extract-groups-from-page url-str)])
-    (displayln
-     (add-groups (group-list-to-json GROUPS) config))))
+     (add-groups (group-list-to-json GROUPS) config)))
 
 (command-line #:program "sfl"
               #:once-any

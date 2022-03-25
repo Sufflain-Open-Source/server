@@ -147,7 +147,7 @@
                                        (cons
                                         'data (make-immutable-hasheq NAMES-HASHES)))))]
        [NAMES-REV    (get-doc-rev database-teachers-names-path config)])
-    (display (string-append "\nADDING NAMES (" (length names) ") ..."))
+    (display (string-append "ADDING NAMES (" (number->string (length names)) ") ...\n"))
     (add DB
          (set-rev-if-needed NAMES/JSON NAMES-REV)
          NAMES-PATH
@@ -245,7 +245,7 @@
       ([DB          (get-database-info config)]
        [GROUPS-PATH (database-groups-path DB)]
        [GROUPS-REV  (get-doc-rev database-groups-path config)])
-    (display (string-append "\nADDING GROUPS (" (length groups) ")..."))
+    (display (string-append "ADDING GROUPS (" (number->string (length (hash-ref (string->jsexpr groups) 'data null))) ") ...\n"))
     (add DB
          (set-rev-if-needed groups GROUPS-REV)
          GROUPS-PATH config)))
