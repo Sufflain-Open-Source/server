@@ -1,5 +1,5 @@
 # --- STAGE 1 ---
-FROM ubuntu AS build
+FROM ubuntu:focal AS build
 ENV CONFIG=/root/.config
 ENV APP=/root/app
 
