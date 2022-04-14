@@ -46,9 +46,10 @@
 ;; get-page: string? -> xexp
 ;; Get a web page and returns it as an SXML.
 (define (get-page url-string #:tcp-call-mock [call/input-url call/input-url])
-  (let* ((URL           (string->url url-string))
-         (GET-PAGE/HTML (call/input-url URL get-pure-port port->string)))
-    (html->xexp GET-PAGE/HTML)))
+  (let* ((URL                    (string->url url-string))
+         (GET-PAGE/HTML          (call/input-url URL get-pure-port port->string))
+         (PAGE-WITHOUT-NBSP/HTML (regexp-replace* "&nbsp;" GET-PAGE/HTML "")))
+    (html->xexp PAGE-WITHOUT-NBSP/HTML)))
 
 (module+ test
   (require rackunit
