@@ -48,8 +48,6 @@
   (require rackunit
            mock)
 
-  (check-equal? (group-list-to-json '("СА21-19" "ИБ31-18")) "[\"СА21-19\",\"ИБ31-18\"]")
-
   (test-case "extract-groups-from-page"
              (define SCRAPE-MOCK
                (mock #:behavior (const '("время " "СА21-19 ауд.304б"))))
