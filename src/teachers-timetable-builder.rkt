@@ -66,13 +66,27 @@
 ;; Returns #f if the name's not found.
 (define (find-name-in-lesson-data name lesson-data)
   (let*
-      ([FILTERED-DATA (filter (lambda (item)
-                                (define TEACHER-NAME-MATCH
-                                  (regexp-match
-                                   (pregexp
-                                    (make-regex-name-chars-optional name)) item))
-                                (if (cons? TEACHER-NAME-MATCH)
-                                    (> (strings-equality-percentage name (car TEACHER-NAME-MATCH)) 80)
+      ([NAME-SPLITTED            (string-split name " ")]
+       [LAST-NAME                (car NAME-SPLITTED)]
+       [INITIALS                 (string-append (cadr NAME-SPLITTED)
+                                                " "
+                                                (caddr NAME-SPLITTED))]
+       [LAST-NAME-OPTIONAL-CHARS (make-regex-case-insensitive
+                                  (make-each-name-char-optional LAST-NAME))]
+       [INITIALS-OPTIONAL-CHARS  (make-regex-case-insensitive
+                                  (make-initials-chars-optional INITIALS))]
+       [FILTERED-DATA (filter (lambda (item)
+                                (define LAST-NAME-MATCH
+                                  (remove-empty-matches
+                                   (regexp-match* (pregexp LAST-NAME-OPTIONAL-CHARS) item)))
+                                (define INITIALS-MATCH
+                                  (remove-empty-matches
+                                   (regexp-match* (pregexp INITIALS-OPTIONAL-CHARS) item)))
+                                (define TEACHER-NAME-MATCH (string-append LAST-NAME-MATCH
+                                                                          " "
+                                                                          INITIALS-MATCH))
+                                (if (>= (strings-equality-percentage name TEACHER-NAME-MATCH) 80)
+                                    #t
                                     #f))
                               lesson-data)]
        [RESULT        (if (cons? FILTERED-DATA)
@@ -82,26 +96,23 @@
         (string-normalize-spaces RESULT)
         RESULT)))
 
-;; make-regex-name-chars-optional: string? -> string?
-;; Make a regex to match a teacher's name.
-(define (make-regex-name-chars-optional full-name)
-  (let*
-      ([LAST-NAME                (car (regexp-match #px"^\\p{L&}+(?= )" full-name))]
-       [INITIALS                 (regexp-match* #px"\\p{L&}{1}\\.{1}" full-name)]
-       [LAST-NAME-OPTIONAL-CHARS (make-each-name-char-optional LAST-NAME)]
-       [INITIALS-OPTIONAL-CHARS  (map (lambda (item)
-                                        (define EXPLODED-ITEM (explode item))
-                                        (string-append (car EXPLODED-ITEM)
-                                                       "\\" 
-                                                       (cadr EXPLODED-ITEM) 
-                                                       "?")) INITIALS)])
-    (string-append "(?i:"
-                   LAST-NAME-OPTIONAL-CHARS
-                   " ?"
-                   (car INITIALS-OPTIONAL-CHARS)
-                   " ?"
-                   (cadr INITIALS-OPTIONAL-CHARS)
-                   ")")))
+(define (remove-empty-matches ml)
+  (foldr string-append
+         ""
+         (filter (lambda (i) (not (equal? "" i))) ml)))
+
+(define (make-regex-case-insensitive regstr)
+  (string-append "(?i:" regstr ")"))
+
+(define (make-initials-chars-optional initials)
+  (define INITIALS (regexp-match* #px"\\p{L&}{1}\\.{1}" initials))
+  (define MODIFIED (map (lambda (item)
+                          (define EXPLODED-ITEM (explode item))
+                          (string-append (car EXPLODED-ITEM)
+                                         "\\"
+                                         (cadr EXPLODED-ITEM)
+                                         "?")) INITIALS))
+  (string-append (car MODIFIED) " *" (cadr MODIFIED)))
 
 ;; make-each-name-char-optional: string? -> string?
 ;; Append "?" after each character. If the character is ".", also prepend "\\".
