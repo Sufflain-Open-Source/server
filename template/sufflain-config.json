@@ -1,18 +1,16 @@
 {
-    "identityToolkit": {
-        "url": ""
-    },
     "user": {
-        "email": "",
+        "name": "",
         "password": ""
     },
     "database": {
         "url": "",
-        "apiKey": "",
         "groupsPath": "",
         "timetablePath": "",
         "hashesPath": "",
-        "postOrderPath": ""
+        "postOrderPath": "",
+        "teachersNamesPath": "",
+        "teachersTimetablePath": ""
     },
     "collegeSite": {
         "url": "",

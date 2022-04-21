@@ -35,7 +35,7 @@
 ;; group-list-to-json: group-list -> string?
 ;; Create a JSON string with a list of groups.
 (define (group-list-to-json groups)
-  (jsexpr->string groups))
+  (jsexpr->string (make-hasheq (list `(data . ,groups)))))
 
 ;; extract-groups-from-page: string? -> group-list
 ;; Find groups on a page with timetable.
@@ -47,13 +47,11 @@
 (module+ test
   (require rackunit
            mock)
-  
-  (check-equal? (group-list-to-json '("СА21-19" "ИБ31-18")) "[\"СА21-19\",\"ИБ31-18\"]")
-  
+
   (test-case "extract-groups-from-page"
-             (define SCRAPE-MOCK 
+             (define SCRAPE-MOCK
                (mock #:behavior (const '("время " "СА21-19 ауд.304б"))))
-             
-             (check-equal? (extract-groups-from-page "https://url.here" 
+
+             (check-equal? (extract-groups-from-page "https://url.here"
                                                      #:scrape-mock SCRAPE-MOCK)
                            '("СА21-19"))))

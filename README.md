@@ -13,7 +13,7 @@ Images are licensed under the **Creative Commons Attribution-NonCommercial-NoDer
 ### Explanation
 The computed hashes are equal to those stored in the database.
 That means the data didn't change.
-The app will wait for the next iteration (the default wait time is 30 minutes).
+The app will wait for the next iteration.
 
 ## How does it work?
 1. Every *[specified time]* minutes the app gets the blog page from the college site.
@@ -34,16 +34,8 @@ We use them to find out if there are any changes or not.
 ![Database timetables](img/db-timetable-edited.png)
 
 ## Project configuration
-### Firebase
-1. Create a user with an Email provider.
-2. Make sure that Firebase Realtime Database write permissions are allowed *only* for a user with a specific UID.
-
-### Realtime Database Rules
-**The following rules are recommended:**
-
-![firebase rules](img/firebase-rules.png)
-
-*Replace "\<your-user-uid\>" with the actual UID. You will use this user to access private locations in the database.*
+###
+You will need a CouchDB database with a configured admin user.
 
 ### Docker
 1. Create a directory called *private* in the project root directory.
@@ -88,7 +80,20 @@ sfl -g [specific timetable url]
 
 The command above will extract groups from the page and add them to the database.
 
-2. Run the app:
+2. Get teachers' names from a file and upload them to the DB.
+
+*The file must contain a valid Racket list of strings:*
+`'("Teacher1's name" "Teacher2's name")`, for example.
+
+```bash
+sfl -n [file path]
+```
+or
+```bash
+sfl --read-names [file path]
+```
+
+3. Run the app:
 ```bash
 sfl --track
 ```
@@ -106,3 +111,4 @@ messages.
 - [html-parsing](https://pkgs.racket-lang.org/package/html-parsing) - Copyright 2003–2012, 2015, 2016, 2018 Neil Van Dyke
 - [mock](https://pkgs.racket-lang.org/package/mock) - Copyright (c) 2016 Jack Firth
 - [while-loop](https://pkgs.racket-lang.org/package/while-loop) - Copyright info is not provided.
+- [percs](https://gitlab.com/crt0r/percs.git) - Copyright (c) 2022 Timofey Chuchkanov
