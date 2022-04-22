@@ -78,13 +78,23 @@
        [FILTERED-DATA (filter (lambda (item)
                                 (define LAST-NAME-MATCH
                                   (remove-empty-matches
-                                   (regexp-match* (pregexp LAST-NAME-OPTIONAL-CHARS) item)))
+                                   (regexp-match* (pregexp LAST-NAME-OPTIONAL-CHARS)
+                                                  (regexp-replace (pregexp INITIALS-OPTIONAL-CHARS) item ""))))
                                 (define INITIALS-MATCH
                                   (remove-empty-matches
-                                   (regexp-match* (pregexp INITIALS-OPTIONAL-CHARS) item)))
+                                   (regexp-match* (pregexp INITIALS-OPTIONAL-CHARS)
+                                                  (regexp-replace (pregexp LAST-NAME-OPTIONAL-CHARS) item ""))))
                                 (define TEACHER-NAME-MATCH (string-append LAST-NAME-MATCH
                                                                           " "
                                                                           INITIALS-MATCH))
+                                (displayln LAST-NAME-OPTIONAL-CHARS)
+                                (displayln INITIALS-OPTIONAL-CHARS)
+                                (display "1")
+                                (displayln LAST-NAME-MATCH)
+                                (display "2")
+                                (displayln INITIALS-MATCH)
+                                (display "3")
+                                (displayln TEACHER-NAME-MATCH)
                                 (if (>= (strings-equality-percentage name TEACHER-NAME-MATCH) 80)
                                     #t
                                     #f))
@@ -92,6 +102,8 @@
        [RESULT        (if (cons? FILTERED-DATA)
                           (car FILTERED-DATA)
                           #f)])
+    (display "4")
+    (displayln RESULT)
     (if (string? RESULT)
         (string-normalize-spaces RESULT)
         RESULT)))
