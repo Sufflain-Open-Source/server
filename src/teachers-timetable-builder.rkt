@@ -87,23 +87,36 @@
                                 (define TEACHER-NAME-MATCH (string-append LAST-NAME-MATCH
                                                                           " "
                                                                           INITIALS-MATCH))
-                                (displayln LAST-NAME-OPTIONAL-CHARS)
-                                (displayln INITIALS-OPTIONAL-CHARS)
-                                (display "1")
-                                (displayln LAST-NAME-MATCH)
-                                (display "2")
-                                (displayln INITIALS-MATCH)
-                                (display "3")
-                                (displayln TEACHER-NAME-MATCH)
-                                (if (>= (strings-equality-percentage name TEACHER-NAME-MATCH) 80)
+                                (define (make-empty-str-if-bool x)
+                                  (if (boolean? x)
+                                      ""
+                                      (car x)))
+                                (define TEACHER-NAME
+                                  (make-empty-str-if-bool
+                                   (regexp-match (pregexp (string-append "(?i:" LAST-NAME ")"))
+                                                 TEACHER-NAME-MATCH)))
+                                ; (displayln LAST-NAME-OPTIONAL-CHARS)
+                                ; (displayln INITIALS-OPTIONAL-CHARS)
+                                ; (display "LAST NAME:")
+                                ; (displayln LAST-NAME-MATCH)
+                                ; (display "INITIALS: ")
+                                ; (displayln INITIALS-MATCH)
+                                ; (display "NAME MATCH: ")
+                                ; (displayln TEACHER-NAME-MATCH)
+                                ; (display "NAME: ")
+                                ; (displayln TEACHER-NAME)
+                                (if (>= (strings-equality-percentage name
+                                                                     (string-append TEACHER-NAME
+                                                                                    " "
+                                                                                    INITIALS-MATCH)) 80)
                                     #t
                                     #f))
                               lesson-data)]
        [RESULT        (if (cons? FILTERED-DATA)
                           (car FILTERED-DATA)
                           #f)])
-    (display "4")
-    (displayln RESULT)
+    ; (display "RESULT: ")
+    ; (displayln RESULT)
     (if (string? RESULT)
         (string-normalize-spaces RESULT)
         RESULT)))
