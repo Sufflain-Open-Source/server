@@ -67,14 +67,14 @@
 (define (read-names-and-add-to-db file-path config)
   (let
       ([NAMES (read-names file-path)])
-     (add-names NAMES config)))
+    (add-names NAMES config)))
 
 ;; get-groups-and-add-to-db: string? jsexpr? -> void?
 ;; A frontend for add-groups
 (define (get-groups-and-add-to-db url-str config)
   (let
       ([GROUPS (extract-groups-from-page url-str)])
-     (add-groups (group-list-to-json GROUPS) config)))
+    (add-groups (group-list-to-json GROUPS) config)))
 
 (command-line #:program "sfl"
               #:once-any
@@ -84,6 +84,8 @@
                                      (get-groups-and-add-to-db PAGE-URL CONFIG))
               (("-t" "--track") "Track timetables changes and upload them to the database."
                                 (main))
+              (("-p" "--purge") "Purge timetables in the database."
+                                (purge-timetables CONFIG))
               (("-n" "--read-names") FILE-PATH
                                      "Read teachers' names and upload them to the DB."
                                      (read-names-and-add-to-db FILE-PATH CONFIG))

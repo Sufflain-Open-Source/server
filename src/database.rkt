@@ -29,6 +29,40 @@
 
 (provide (all-defined-out))
 
+;; purge-timetables: jsexpr? -> any/c
+(define (purge-timetables config)
+  (let
+      ([DB (get-database-info config)]
+       [HASHES-INTERNAL-FIELDS
+        (get-internal-fields (get database-hashes-path config))]
+       [ORDER-INTERNAL-FIELDS
+        (get-internal-fields (get database-order-path config))]
+       [TIMETABLES-INTERNAL-FIELDS
+        (get-internal-fields (get database-timetable-path config))]
+       [TEACHERS-TIMETABLES-INTERNAL-FIELDS
+        (get-internal-fields (get database-teachers-timetable-path config))]
+       [AUTH-HEADER (make-auth-header config)])
+    (displayln
+     (add DB
+          (jsexpr->string HASHES-INTERNAL-FIELDS)
+          (database-hashes-path DB)
+          config))
+    (displayln
+     (add DB
+          (jsexpr->string ORDER-INTERNAL-FIELDS)
+          (database-order-path DB)
+          config))
+    (displayln
+     (add DB
+          (jsexpr->string TIMETABLES-INTERNAL-FIELDS)
+          (database-timetable-path DB)
+          config))
+    (displayln
+     (add DB
+          (jsexpr->string TEACHERS-TIMETABLES-INTERNAL-FIELDS)
+          (database-teachers-timetable-path DB)
+          config))))
+
 ;; remove-redundant: (listof hashes) group-list (listof teacher?) jsexpr? -> void?
 ;; Remove redundant timetables for each group.
 (define (remove-redundant hashes groups teachers config)
@@ -273,6 +307,13 @@
   (if (hash-has-key? DOC REV-KEY)
       (hash-ref DOC REV-KEY)
       ""))
+
+;; get-internal-fields: hasheq? -> hasheq?
+(define (get-internal-fields hash)
+  (make-immutable-hasheq
+   (filter (lambda (p)
+             (or (equal? (car p) '_rev) (equal? (car p) '_id)))
+           (hash->list hash))))
 
 ;; get: procedure? jsexpr? -> any/c
 (define (get get-db-path-proc config)
