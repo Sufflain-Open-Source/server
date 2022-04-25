@@ -79,11 +79,13 @@
                                 (define LAST-NAME-MATCH
                                   (remove-empty-matches
                                    (regexp-match* (pregexp LAST-NAME-OPTIONAL-CHARS)
-                                                  (regexp-replace (pregexp INITIALS-OPTIONAL-CHARS) item ""))))
+                                                  item)))
                                 (define INITIALS-MATCH
                                   (remove-empty-matches
                                    (regexp-match* (pregexp INITIALS-OPTIONAL-CHARS)
-                                                  (regexp-replace (pregexp LAST-NAME-OPTIONAL-CHARS) item ""))))
+                                                  (regexp-replace (pregexp LAST-NAME-OPTIONAL-CHARS)
+                                                                  item
+                                                                  ""))))
                                 (define TEACHER-NAME-MATCH (string-append LAST-NAME-MATCH
                                                                           " "
                                                                           INITIALS-MATCH))
@@ -95,20 +97,25 @@
                                   (make-empty-str-if-bool
                                    (regexp-match (pregexp (string-append "(?i:" LAST-NAME ")"))
                                                  TEACHER-NAME-MATCH)))
+                                (define TEACHER-INITIALS
+                                  (make-empty-str-if-bool (regexp-match (pregexp INITIALS-OPTIONAL-CHARS)
+                                                                        INITIALS-MATCH)))
                                 ; (displayln LAST-NAME-OPTIONAL-CHARS)
                                 ; (displayln INITIALS-OPTIONAL-CHARS)
                                 ; (display "LAST NAME:")
                                 ; (displayln LAST-NAME-MATCH)
-                                ; (display "INITIALS: ")
+                                ; (display "INITIALS MATCH: ")
                                 ; (displayln INITIALS-MATCH)
                                 ; (display "NAME MATCH: ")
                                 ; (displayln TEACHER-NAME-MATCH)
                                 ; (display "NAME: ")
                                 ; (displayln TEACHER-NAME)
+                                ; (display "INITIALS")
+                                ; (displayln TEACHER-INITIALS)
                                 (if (>= (strings-equality-percentage name
                                                                      (string-append TEACHER-NAME
                                                                                     " "
-                                                                                    INITIALS-MATCH)) 80)
+                                                                                    TEACHER-INITIALS)) 80)
                                     #t
                                     #f))
                               lesson-data)]
