@@ -102,6 +102,15 @@ or
 sfl -t
 ```
 
+4. Purge timetables data in the database
+```bash
+sfl -p
+```
+or
+```bash
+sfl --purge
+```
+
 ## Commit Message Guidelines
 We use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) to format our commit
 messages.
